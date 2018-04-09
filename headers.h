@@ -124,3 +124,34 @@
 +(id)_xeninfo_albumArt;
 @end
 
+@interface NSUserDefaults (XenInfo)
+- (id)objectForKey:(NSString *)key inDomain:(NSString *)domain;
+- (void)setObject:(id)value forKey:(NSString *)key inDomain:(NSString *)domain;
+@end
+
+@interface SBApplicationController : NSObject
++ (id)sharedInstance;
+- (id)allApplications;
+- (id)applicationWithBundleIdentifier:(id)arg1;
++(id)sharedInstanceIfExists;
+@end
+
+@interface NSConcreteNotification : NSNotification {
+    BOOL  dyingObject;
+    NSString * name;
+    id  object;
+    NSDictionary * userInfo;
+}
+@end
+
+@interface FBApplicationProvisioningProfile : NSObject {
+    NSString * _UUID;
+    NSDate * _expirationDate;
+}
+
+@property (nonatomic, readonly, copy) NSString *UUID;
+@property (getter=isAppleInternalProfile, nonatomic, readonly) BOOL appleInternalProfile;
+@property (getter=isBeta, nonatomic, readonly) BOOL beta;
+@property (nonatomic, readonly, retain) NSDate *expirationDate;
+@end
+

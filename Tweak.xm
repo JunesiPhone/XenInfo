@@ -9,81 +9,40 @@
 #import "weather.h"
 #import <WebKit/WebKit.h>
 
-@interface NSUserDefaults (FrontPage)
-- (id)objectForKey:(NSString *)key inDomain:(NSString *)domain;
-- (void)setObject:(id)value forKey:(NSString *)key inDomain:(NSString *)domain;
-@end
-
-@interface SBApplicationController : NSObject
-+ (id)sharedInstance;
-- (id)allApplications;
-- (id)applicationWithBundleIdentifier:(id)arg1;
-+(id)sharedInstanceIfExists;
-@end
-
-@interface NSConcreteNotification : NSNotification {
-    BOOL  dyingObject;
-    NSString * name;
-    id  object;
-    NSDictionary * userInfo;
-}
-@end
-
-// static NSString *nsDomainString = @"com.junesiphone.aneinfo";
-// static NSString *nsNotificationString = @"com.junesiphone.aneinfo/preferences.changed";
-
-// static bool enabled;
-//static int top = 0;
-
-static float deviceVersion = [[[UIDevice currentDevice] systemVersion] floatValue];
-static bool loaded = NO;
-static bool deviceON = YES;
-static NSMutableArray* _webviews = nil;
-
 @interface XENHWebViewController : UIViewController <WKNavigationDelegate, UIWebViewDelegate> {
 
-	NSString* _baseString;
-	BOOL _usingFallback;
-	NSDictionary* _metadata;
-	BOOL _isFullscreen;
-	int _variant;
-	WKWebView* _webView;
-	UIWebView* _fallbackWebView;
+    NSString* _baseString;
+    BOOL _usingFallback;
+    NSDictionary* _metadata;
+    BOOL _isFullscreen;
+    int _variant;
+    WKWebView* _webView;
+    UIWebView* _fallbackWebView;
 
 }
 @property (nonatomic,retain) WKWebView * webView;
 @end
 
-@interface FBApplicationProvisioningProfile : NSObject {
-    NSString * _UUID;
-    NSDate * _expirationDate;
-}
 
-@property (nonatomic, readonly, copy) NSString *UUID;
-@property (getter=isAppleInternalProfile, nonatomic, readonly) BOOL appleInternalProfile;
-@property (getter=isBeta, nonatomic, readonly) BOOL beta;
-@property (nonatomic, readonly, retain) NSDate *expirationDate;
-@end
-
+static float deviceVersion = [[[UIDevice currentDevice] systemVersion] floatValue];
+static NSMutableArray* _webviews = nil;
 static MPUNowPlayingController *globalMPUNowPlaying;
+static bool loaded = NO;
+static bool deviceON = YES;
+static bool hasWebview = NO;
 static bool firstLoad = false;
-//static int lastWeatherUpdate = 1;
-//static bool straightOuttaRespring = YES;
+static int lastWeatherUpdate = 1;
 //static NSMutableArray* signedInfo = [[NSMutableArray alloc] init];
 
 static void update(NSString* values, NSString* type){
 	for (WKWebView* webview in _webviews) {
-			if([[NSString stringWithFormat:@"%@", webview.URL] isEqualToString:@"about:blank"]){
-				//remove from array?
-			}else{
-				[webview evaluateJavaScript:values completionHandler:^(id object, NSError *error) {
-		            //NSLog(@"JINFO %@", error);
-		        }];
-		        NSString* function = [NSString stringWithFormat:@"mainUpdate('%@')", type];
-		        [webview evaluateJavaScript:function completionHandler:^(id object, NSError *error) {
-		                //NSLog(@"JINFO %@", error);
-		        }];
-			}
+		if([[NSString stringWithFormat:@"%@", webview.URL] isEqualToString:@"about:blank"]){
+			//do nothing it's blank.
+		}else{
+			[webview evaluateJavaScript:values completionHandler:^(id object, NSError *error) {}];
+	        NSString* function = [NSString stringWithFormat:@"mainUpdate('%@')", type];
+	        [webview evaluateJavaScript:function completionHandler:^(id object, NSError *error) {}];
+		}
 	}
 }
 
@@ -91,6 +50,7 @@ static void update(NSString* values, NSString* type){
 	iOS10 changed temp type. What a mess. This will convert C or F
 	depending on what the user has selected in the weather.app
 */
+
 static int getIntFromWFTemp(WFTemperature* temp, City *city){
 	if([[[UIDevice currentDevice] systemVersion] floatValue] >= 10.0f){
         return [[objc_getClass("WeatherPreferences") sharedPreferences] isCelsius] ? (int)temp.celsius : (int)temp.fahrenheit;
@@ -104,26 +64,32 @@ static int getIntFromWFTemp(WFTemperature* temp, City *city){
     }
 }
 
-//credit Andrew Wiik & Matchstic
-//https://github.com/Matchstic/InfoStats2/blob/cd31d7a9ec266afb10ea3576b06399f5900c2c1e/InfoStats2/IS2Weather.m
-//oh boy iOS11 doesn't like this one. iP7 is the worst.
-static NSString* nameForCondition(int condition){
-    /*
+/*
+    credit Andrew Wiik & Matchstic
+    https://github.com/Matchstic/InfoStats2/blob/cd31d7a9ec266afb10ea3576b06399f5900c2c1e/InfoStats2/IS2Weather.m
+
+    oh boy iOS11 doesn't like this one. iP7 is the worst.
+
     4 - Location services on but weather set to While Using
     2 - Location services off or weather set to off
     3 - Location services on and weather set to always
-    */
+
+*/
+
+static NSString* nameForCondition(int condition){
     if([objc_getClass("CLLocationManager") authorizationStatusForBundleIdentifier:@"com.apple.weather"] == 2 || [objc_getClass("CLLocationManager") authorizationStatusForBundleIdentifier:@"com.apple.weather"] == 4){
         return @"Set weather location to Always";
     }else{
         MSImageRef weather = MSGetImageByName("/System/Library/PrivateFrameworks/Weather.framework/Weather");
-        CFStringRef *_weatherDescription = (CFStringRef*)MSFindSymbol(weather, "_WeatherDescription") + condition;
-        NSString *cond = (__bridge id)*_weatherDescription;
-        return [[NSBundle bundleWithPath:@"/System/Library/PrivateFrameworks/Weather.framework"] localizedStringForKey:cond value:@"" table:@"WeatherFrameworkLocalizableStrings"];
+        if(weather){
+            CFStringRef *_weatherDescription = (CFStringRef*)MSFindSymbol(weather, "_WeatherDescription") + condition;
+            NSString *cond = (__bridge id)*_weatherDescription;
+            return [[NSBundle bundleWithPath:@"/System/Library/PrivateFrameworks/Weather.framework"] localizedStringForKey:cond value:@"" table:@"WeatherFrameworkLocalizableStrings"];
+        }else{
+            return @"Weather condition not found";
+        }
     }
 }
-//end
-
 
 static void sendWeather(City* city){
 
@@ -155,9 +121,8 @@ static void sendWeather(City* city){
             naturalCondition = @"No condition";
         }
 
-
-         NSMutableDictionary *dayForecasts;
-         NSMutableArray *fcastArray = [[NSMutableArray alloc] init];
+        NSMutableDictionary *dayForecasts;
+        NSMutableArray *fcastArray = [[NSMutableArray alloc] init];
 
         for (DayForecast *day in city.dayForecasts) {
             int lowForcast = getIntFromWFTemp([day valueForKey:@"low"], city);
@@ -216,100 +181,127 @@ static void sendWeather(City* city){
     }
 }
 
+/* 
+    Get city object
+*/
+
+static City* getCity(){
+    City *currentCity = nil;
+    if([[objc_getClass("WeatherPreferences") sharedPreferences]localWeatherCity]){
+        currentCity = [[objc_getClass("WeatherPreferences") sharedPreferences]localWeatherCity];
+    }else{
+        if([[[objc_getClass("WeatherPreferences") sharedPreferences]loadSavedCities] count] > 0){
+            currentCity = [[objc_getClass("WeatherPreferences") sharedPreferences]loadSavedCities][0];
+        }
+    }
+    return currentCity;
+}
+
+/* 
+    load Weather from city with no update
+*/
+
+static void loadCurrentWeather(){
+    sendWeather(getCity());
+}
+
+
+/* 
+    Attempt to refresh weather without location services.
+*/
+
+static void loadWeatherNoLocationServices(){
+    City* testCity = nil;
+    if([[[objc_getClass("WeatherPreferences") sharedPreferences]loadSavedCities] count] > 0){
+
+         testCity = [[objc_getClass("WeatherPreferences") sharedPreferences]loadSavedCities][0];
+
+        if([testCity.name isEqualToString:@"Local Weather"]){
+            if([[[objc_getClass("WeatherPreferences") sharedPreferences]loadSavedCities] count] > 1){
+                testCity = [[objc_getClass("WeatherPreferences") sharedPreferences]loadSavedCities][1];
+            }
+        }
+
+        if(deviceVersion < 10.0f){
+            [[objc_getClass("TWCLocationUpdater") sharedLocationUpdater] updateWeatherForLocation:testCity.location city:testCity withCompletionHandler:^{
+                sendWeather(testCity);
+            }];
+        }else{
+            [[objc_getClass("TWCLocationUpdater") sharedLocationUpdater] _updateWeatherForLocation:testCity.location city:testCity completionHandler:^{
+                sendWeather(testCity);
+            }];
+        }
+
+    }
+}
+
+
+/* 
+    Reload weather with location services.
+*/
+
+static void loadWeatherWithLocationServices(){
+    City *currentCity = getCity();
+
+    WeatherLocationManager* WLM = [objc_getClass("WeatherLocationManager")sharedWeatherLocationManager];
+    TWCLocationUpdater *TWCLU = [objc_getClass("TWCLocationUpdater") sharedLocationUpdater];
+
+    CLLocationManager *CLM = [[CLLocationManager alloc] init];
+    [WLM setDelegate:CLM];
+
+    if([[[UIDevice currentDevice] systemVersion] floatValue] > 8.3f){
+        [WLM setLocationTrackingReady:YES activelyTracking:NO watchKitExtension:NO];
+    }
+
+    [WLM setLocationTrackingActive:YES];
+    [[objc_getClass("WeatherPreferences") sharedPreferences] setLocalWeatherEnabled:YES];
+
+    if(deviceVersion < 10.0f){
+        [TWCLU updateWeatherForLocation:[WLM location] city:currentCity];
+        dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.2);
+        dispatch_after(delay, dispatch_get_main_queue(), ^(void){
+            sendWeather(currentCity);
+        });
+    }else{
+        [TWCLU _updateWeatherForLocation:[WLM location] city:currentCity completionHandler:^{
+            sendWeather(currentCity);
+        }];
+    }
+    [WLM setLocationTrackingActive:NO];
+    [WLM setLocationTrackingIsReady:NO];
+    [CLM release];
+    WLM = nil;
+    TWCLU = nil;
+}
+
 /*
-
-    authorizatonStatusForBundle "weather"
-
-    4 - Location services on but weather set to While Using
-    2 - Location services off or weather set to off
-    3 - Location services on and weather set to always
+    Check to see what user has enabled. (recommended the user has location services on and weather set to always)
 */
 
 static void refreshWeather(){
-
-	City *currentCity = nil;
-	if([[objc_getClass("WeatherPreferences") sharedPreferences]localWeatherCity]){
-		currentCity = [[objc_getClass("WeatherPreferences") sharedPreferences]localWeatherCity];
-	}else{
-		if([[[objc_getClass("WeatherPreferences") sharedPreferences]loadSavedCities] count] > 0){
-			currentCity = [[objc_getClass("WeatherPreferences") sharedPreferences]loadSavedCities][0];
-		}
-	}
 	if(![CLLocationManager locationServicesEnabled] || [objc_getClass("CLLocationManager") authorizationStatusForBundleIdentifier:@"com.apple.weather"] == 2 || [objc_getClass("CLLocationManager") authorizationStatusForBundleIdentifier:@"com.apple.weather"] == 4){
-		 City* testCity = nil;
-		if([[[objc_getClass("WeatherPreferences") sharedPreferences]loadSavedCities] count] > 0){
-			 testCity = [[objc_getClass("WeatherPreferences") sharedPreferences]loadSavedCities][0];
-			if([testCity.name isEqualToString:@"Local Weather"]){
-				if([[[objc_getClass("WeatherPreferences") sharedPreferences]loadSavedCities] count] > 1){
-					testCity = [[objc_getClass("WeatherPreferences") sharedPreferences]loadSavedCities][1];
-				}
-			}
-			if([[[UIDevice currentDevice] systemVersion] floatValue] < 10.0f){
-	            [[objc_getClass("TWCLocationUpdater") sharedLocationUpdater] updateWeatherForLocation:testCity.location city:testCity withCompletionHandler:^{
-	            	sendWeather(testCity);
-	            }];
-	        }else{
-	            [[objc_getClass("TWCLocationUpdater") sharedLocationUpdater] _updateWeatherForLocation:testCity.location city:testCity completionHandler:^{
-	            	sendWeather(testCity);
-	            }];
-	        }
-            NSLog(@"test %@", testCity);
-		}
+        loadWeatherNoLocationServices();
 	}else{
-        if(!currentCity){
-            currentCity = [[objc_getClass("WeatherPreferences") sharedPreferences]loadSavedCities][0];
-        }
-		WeatherLocationManager* WLM = [objc_getClass("WeatherLocationManager")sharedWeatherLocationManager];
-        TWCLocationUpdater *TWCLU = [objc_getClass("TWCLocationUpdater") sharedLocationUpdater];
-
-        CLLocationManager *CLM = [[CLLocationManager alloc] init];
-        [WLM setDelegate:CLM];
-
-        if([[[UIDevice currentDevice] systemVersion] floatValue] > 8.3f){
-        	[WLM setLocationTrackingReady:YES activelyTracking:NO watchKitExtension:NO];
-        }
-
-        [WLM setLocationTrackingActive:YES];
-        [[objc_getClass("WeatherPreferences") sharedPreferences] setLocalWeatherEnabled:YES];
-
-        if([[[UIDevice currentDevice] systemVersion] floatValue] < 10.0f){
-            [TWCLU updateWeatherForLocation:[WLM location] city:currentCity];
-            dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.2);
-			dispatch_after(delay, dispatch_get_main_queue(), ^(void){
-            	sendWeather(currentCity);
-            });
-        }else{
-            [TWCLU _updateWeatherForLocation:[WLM location] city:currentCity completionHandler:^{
-                sendWeather(currentCity);
-            }];
-        }
-        [WLM setLocationTrackingActive:NO];
-        [WLM setLocationTrackingIsReady:NO];
-        [CLM release];
-        WLM = nil;
-        TWCLU = nil;
+		loadWeatherWithLocationServices();
 	}
-	currentCity = nil;
 }
 
 /*
 	well. this is what I ended up with. I needed some way of stopping the update for a period of time.
 	This was the most reliable throughout the things I tired.
 */
+
 static void getWeather(){
-	//lastWeatherUpdate = 0;
- //    NSLog(@"JINFO Called");
-	// if(lastWeatherUpdate > 0){
- //        NSLog(@"JINFO refreshWeather");
-	// 	lastWeatherUpdate = 0;
-	// 	dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 1200.0);
-	// 	dispatch_after(delay, dispatch_get_main_queue(), ^(void){
-	// 		lastWeatherUpdate = 1;
- //            NSLog(@"JINFO TimesUp");
-	// 	});
-	// 	refreshWeather();
-	// }
-	refreshWeather();
+	if(lastWeatherUpdate > 0){
+		lastWeatherUpdate = 0;
+		dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 1200.0);
+		dispatch_after(delay, dispatch_get_main_queue(), ^(void){
+			lastWeatherUpdate = 1;
+		});
+		refreshWeather();
+	}else{
+        loadCurrentWeather();
+    }
 }
 
 
@@ -412,8 +404,11 @@ static void getEvents(){
     store = nil;
 }
 
-//credit Matchstic
-//https://github.com/Matchstic/InfoStats2/blob/cd31d7a9ec266afb10ea3576b06399f5900c2c1e/InfoStats2/IS2System.m
+/*
+    credit Matchstic
+    https://github.com/Matchstic/InfoStats2/blob/cd31d7a9ec266afb10ea3576b06399f5900c2c1e/InfoStats2/IS2System.m
+*/
+
 static int getSysInfo(uint typeSpecifier){
 	size_t size = sizeof(int);
     int results;
@@ -586,17 +581,14 @@ static void getMusic(){
 
 %hook SBStatusBarStateAggregator
 - (void)_notifyItemChanged:(int)arg1{
-    if(loaded && deviceON){
+    if(loaded && deviceON && hasWebview){
         getStatusbar();
     }
     %orig;
 }
-// -(void)updateStatusBarItem:(int)arg1{
-//     NSLog(@"aneinfo Update STATUS notifyItem");
-//     %orig;
-// }
+
 -(void)_updateDataNetworkItem{
-    if(loaded){
+    if(loaded && deviceON && hasWebview){
         getStatusbar();
     }
     %orig;
@@ -605,7 +597,7 @@ static void getMusic(){
 
 %hook SBUIController
 - (void)updateBatteryState:(id)arg1{
-    if(loaded && deviceON){
+    if(loaded && deviceON && hasWebview){
         getBattery();
     }
 	%orig;
@@ -614,13 +606,13 @@ static void getMusic(){
 
 %hook SBMediaController
 - (void)_nowPlayingInfoChanged{
-	if(loaded && deviceON){
+	if(loaded && deviceON && hasWebview){
         getMusic();
     }
 	return %orig;
 }
 - (void)_mediaRemoteNowPlayingInfoDidChange:(id)arg1{
-    if(loaded && deviceON){
+    if(loaded && deviceON && hasWebview){
         getMusic();
     }
 	%orig;
@@ -668,15 +660,17 @@ static bool isWeatherInstalled(){
 
 static void loadAllInfo(){
     loaded = YES;
-    dispatch_async(dispatch_get_main_queue(), ^(void){
-		getBattery();
-    	getStatusbar();
-    	if(isWeatherInstalled()){
-        	getWeather();
-    	}
-    	getEvents();
-    	getMusic();
-	});
+    if(hasWebview){
+        dispatch_async(dispatch_get_main_queue(), ^(void){
+            getBattery();
+            getStatusbar();
+            if(isWeatherInstalled()){
+                getWeather();
+            }
+            getEvents();
+            getMusic();
+        });
+    }
 }
 
 
@@ -754,6 +748,9 @@ static void loadAllInfo(){
 				[_webviews removeObjectAtIndex:index];
 			}
 		}
+        if([_webviews count] == 0){
+            hasWebview = NO;
+        }
 	}
 
 	/*
@@ -761,6 +758,7 @@ static void loadAllInfo(){
 	*/
 	-(void)setWebView:(WKWebView *)arg1{
 		%orig;
+        hasWebview = YES;
 		if(!_webviews){
 			_webviews=[[NSMutableArray array] retain];
 		}
