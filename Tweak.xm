@@ -653,7 +653,11 @@ static bool isWeatherInstalled(){
     if([[objc_getClass("SBApplicationController") sharedInstance] applicationWithBundleIdentifier:@"com.apple.weather"]){
         return YES;
     }else{
-        showAlert();
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad ){
+            //research this
+        }else{
+            showAlert();
+        }
         return NO;
     }
 }
