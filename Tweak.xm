@@ -642,7 +642,7 @@ static void getMusic(){
 // %end
 
 static void showAlert(){
-    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"AneInfo" message:@"Hey! XenInfo provides weather from the weather.app which you have deleted. \n\n We will not be giving you any weather information sorry." preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"XenInfo" message:@"Hey! XenInfo provides weather from the weather.app which you have deleted. \n\n We will not be giving you any weather information sorry." preferredStyle:UIAlertControllerStyleAlert];
     [alertController addAction:[UIAlertAction actionWithTitle:@"Dangit" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         [[objc_getClass("SBIconController") sharedInstance] dismissViewControllerAnimated:YES completion:NULL];
     }]];
