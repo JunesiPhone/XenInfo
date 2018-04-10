@@ -77,18 +77,20 @@ static int getIntFromWFTemp(WFTemperature* temp, City *city){
 */
 
 static NSString* nameForCondition(int condition){
-    if([objc_getClass("CLLocationManager") authorizationStatusForBundleIdentifier:@"com.apple.weather"] == 2 || [objc_getClass("CLLocationManager") authorizationStatusForBundleIdentifier:@"com.apple.weather"] == 4){
-        return @"Set weather location to Always";
-    }else{
-        MSImageRef weather = MSGetImageByName("/System/Library/PrivateFrameworks/Weather.framework/Weather");
-        if(weather){
-            CFStringRef *_weatherDescription = (CFStringRef*)MSFindSymbol(weather, "_WeatherDescription") + condition;
-            NSString *cond = (__bridge id)*_weatherDescription;
-            return [[NSBundle bundleWithPath:@"/System/Library/PrivateFrameworks/Weather.framework"] localizedStringForKey:cond value:@"" table:@"WeatherFrameworkLocalizableStrings"];
-        }else{
-            return @"Weather condition not found";
-        }
-    }
+    return @"Use weather.conditionCode";
+    // if([objc_getClass("CLLocationManager") authorizationStatusForBundleIdentifier:@"com.apple.weather"] == 2 || [objc_getClass("CLLocationManager") authorizationStatusForBundleIdentifier:@"com.apple.weather"] == 4){
+    //     return @"Set weather location to Always";
+    // }else{
+    //     return @"Use weather.conditionCode";
+    //     MSImageRef weather = MSGetImageByName("/System/Library/PrivateFrameworks/Weather.framework/Weather");
+    //     if(weather){
+    //         CFStringRef *_weatherDescription = (CFStringRef*)MSFindSymbol(weather, "_WeatherDescription") + condition;
+    //         NSString *cond = (__bridge id)*_weatherDescription;
+    //         return [[NSBundle bundleWithPath:@"/System/Library/PrivateFrameworks/Weather.framework"] localizedStringForKey:cond value:@"" table:@"WeatherFrameworkLocalizableStrings"];
+    //     }else{
+    //         return @"Weather condition not found";
+    //     }
+    // }
 }
 
 static void sendWeather(City* city){
