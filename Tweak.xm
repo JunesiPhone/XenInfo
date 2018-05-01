@@ -732,22 +732,24 @@ static void loadAllInfo(){
 
 
 %hook XENHWebViewController
-    
+
+    //play and pause window.location = 'xeninfo:playpause';
     %new
     -(void)playpause{
         [[objc_getClass("SBMediaController") sharedInstance] togglePlayPause];
     }
-
+    //next track window.location = 'xeninfo:nextrack';
     %new
     -(void)nextrack{
          [[objc_getClass("SBMediaController") sharedInstance] changeTrack:1];
     }
-
+    //previous track window.location = 'xeninfo:prevtrack';
     %new
     -(void)prevtrack{
         [[objc_getClass("SBMediaController") sharedInstance] changeTrack:-1];
     }
 
+    //open app from XenHTML widget window.location = 'xeninfo:openapp:com.spotify.client';
     %new
     -(void)openapp:(NSString *)bundle{
         @try{
@@ -757,16 +759,17 @@ static void loadAllInfo(){
         }
     }
 
+    //pretty strange I must add this, but I did.
     %new
     - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
         NSURLRequest *request = navigationAction.request;
         NSString *url = [[request URL]absoluteString];
-        NSLog(@"XenInfo Wanted to change url %@", url);
-        if ([url hasPrefix:@"xeninfo:"]) {
+        
+        if ([url hasPrefix:@"xeninfo:"]) { //devs will call window.location = 'xeninfo:playpause'; or window.location = 'xeninfo:openapp:com.spotify.client';
             NSArray *components = [url componentsSeparatedByString:@":"];
             NSString *function = [components objectAtIndex:1];
             @try {
-                if([components count] > 2){
+                if([components count] > 2){ //check it has more than one component if so pass the parameter, if not just call the method
                     NSString *func = [NSString stringWithFormat:@"%@:",[components objectAtIndex:1]];
                     NSString *param = [NSString stringWithFormat:@"%@",[components objectAtIndex:2]];
                     if([self respondsToSelector:NSSelectorFromString(func)]){
