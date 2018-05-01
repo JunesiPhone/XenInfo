@@ -244,14 +244,19 @@ static void loadWeatherNoLocationServices(){
 
 static void loadWeatherWithLocationServices(){
     City *currentCity = getCity();
-
     WeatherLocationManager* WLM = [objc_getClass("WeatherLocationManager")sharedWeatherLocationManager];
     TWCLocationUpdater *TWCLU = [objc_getClass("TWCLocationUpdater") sharedLocationUpdater];
 
     CLLocationManager *CLM = [[CLLocationManager alloc] init];
     [WLM setDelegate:CLM];
 
-    if([[[UIDevice currentDevice] systemVersion] floatValue] > 8.3f){
+    if(deviceVersion >= 8.3f){
+        if([[objc_getClass("WeatherLocationManager")sharedWeatherLocationManager] respondsToSelector:@selector(setLocationTrackingReady:activelyTracking:watchKitExtension:)]){
+            [WLM setLocationTrackingReady:YES activelyTracking:NO watchKitExtension:NO];
+        }
+    }
+
+    if(deviceVersion >= 8.3f){
         [WLM setLocationTrackingReady:YES activelyTracking:NO watchKitExtension:NO];
     }
 
@@ -317,8 +322,8 @@ static void getEvents(){
      NSDate *start = [NSDate date];
      NSDate *end = [NSDate dateWithTimeInterval:25920000 sinceDate:start];
 
-
-     NSPredicate* predicate = [store predicateForEventsWithStartDate:start endDate:end calendars:nil];
+     NSMutableArray *searchableCalendars = [[store calendarsForEntityType:EKEntityTypeEvent] mutableCopy];
+     NSPredicate* predicate = [store predicateForEventsWithStartDate:start endDate:end calendars:searchableCalendars];
      NSArray *events = [store eventsMatchingPredicate:predicate];
 
      NSMutableDictionary *dateDict;
@@ -657,6 +662,7 @@ static bool isWeatherInstalled(){
     }else{
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad ){
             //research this
+            return YES;
         }else{
             showAlert();
         }
@@ -724,7 +730,64 @@ static void loadAllInfo(){
 // 	[[NSNotificationCenter defaultCenter] removeObserver:sbObserver];
 // }
 
+
 %hook XENHWebViewController
+    
+    %new
+    -(void)playpause{
+        [[objc_getClass("SBMediaController") sharedInstance] togglePlayPause];
+    }
+
+    %new
+    -(void)nextrack{
+         [[objc_getClass("SBMediaController") sharedInstance] changeTrack:1];
+    }
+
+    %new
+    -(void)prevtrack{
+        [[objc_getClass("SBMediaController") sharedInstance] changeTrack:-1];
+    }
+
+    %new
+    -(void)openapp:(NSString *)bundle{
+        @try{
+            [[objc_getClass("UIApplication") sharedApplication] launchApplicationWithIdentifier:bundle suspended:NO];
+        }@catch(NSException* err){
+            NSLog(@"FPPlus Launch Error%@", err);
+        }
+    }
+
+    %new
+    - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+        NSURLRequest *request = navigationAction.request;
+        NSString *url = [[request URL]absoluteString];
+        NSLog(@"XenInfo Wanted to change url %@", url);
+        if ([url hasPrefix:@"xeninfo:"]) {
+            NSArray *components = [url componentsSeparatedByString:@":"];
+            NSString *function = [components objectAtIndex:1];
+            @try {
+                if([components count] > 2){
+                    NSString *func = [NSString stringWithFormat:@"%@:",[components objectAtIndex:1]];
+                    NSString *param = [NSString stringWithFormat:@"%@",[components objectAtIndex:2]];
+                    if([self respondsToSelector:NSSelectorFromString(func)]){
+                        [self performSelector:NSSelectorFromString(func)
+                                   withObject:param
+                                   afterDelay:0];
+                    }
+                }else{
+                    if([self respondsToSelector:NSSelectorFromString(function)]){
+                        [self performSelector:NSSelectorFromString(function)
+                                   withObject:nil
+                                   afterDelay:0];
+                    }
+                }
+            } @catch (NSException *exception) {
+                NSLog(@"XenInfo - Error in WKWebView Decide Policy %@",exception);
+            }
+            //decisionHandler(WKNavigationActionPolicyCancel);
+        }
+        decisionHandler(WKNavigationActionPolicyAllow);
+    }
 
 	/*
 		Detects when a webview did finish loading completely.
