@@ -155,3 +155,15 @@
 @property (nonatomic, readonly, retain) NSDate *expirationDate;
 @end
 
+//alarms
+@interface ClockManager
+    + (id)sharedManager;
+    -(NSArray *)scheduledLocalNotificationsCache;
+    -(void)refreshScheduledLocalNotificationsCache;
+    -(void)resetUpdatesToLocalNotificationsCache;
+@end
+
+@interface UIConcreteLocalNotification
+- (id)fireDate;
+-(id)userInfo;
+@end

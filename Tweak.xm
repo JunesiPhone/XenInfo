@@ -487,6 +487,68 @@ static void getStatusbar(){
     update(statusbar, @"statusbar");
 }
 
+
+
+
+static id getAlarm(int info){
+    NSString* alarmInfo = @"";
+    NSArray *alarms;
+    NSString *formatStringForHours = [NSDateFormatter dateFormatFromTemplate:@"j" options:0 locale:[NSLocale currentLocale]];
+    NSRange containsA = [formatStringForHours rangeOfString:@"a"];
+    BOOL hasAMPM = containsA.location != NSNotFound;
+    ClockManager *manager = [objc_getClass("ClockManager") sharedManager];
+    if(deviceVersion >= 9.0f){
+        [manager refreshScheduledLocalNotificationsCache];
+    }
+    alarms = [manager scheduledLocalNotificationsCache];
+    if(alarms){
+        for(UIConcreteLocalNotification *alarm in alarms){
+            int day = (int)[[NSCalendar currentCalendar] components:NSCalendarUnitDay fromDate:alarm.fireDate].day;
+            int hr = [[alarm.userInfo valueForKey:@"hour"] intValue];
+            NSString *mn = [NSString stringWithFormat:@"%@", [alarm.userInfo valueForKey:@"minute"]];
+            NSString *pm;
+            if([mn isEqualToString:@"0"]){
+                mn = @"00";
+            }
+            if(hasAMPM){
+                if(hr > 12){
+                    pm = @"PM";
+                    hr = hr - 12;
+                }else{
+                    pm = @"AM";
+                }
+                if(hr == 0){
+                    hr = 12;
+                }
+            }else{
+                pm = @"";
+            }
+            if(alarm.userInfo){
+                switch (info) {
+                    case 0:
+                        alarmInfo = [NSString stringWithFormat:@"%d:%@ %@", hr, mn, pm];
+                        break;
+                    case 1:
+                        alarmInfo = [NSString stringWithFormat:@"%d:%@", hr, mn];
+                        break;
+                    case 2:
+                        alarmInfo = [NSString stringWithFormat:@"%d", hr];
+                        break;
+                    case 3:
+                        alarmInfo = [NSString stringWithFormat:@"%@", mn];
+                        break;
+                    case 4:
+                        alarmInfo = [NSString stringWithFormat:@"%d", day];
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+    return alarmInfo;
+}
+
 static void getBattery(){
 	SBUIController *SB = [objc_getClass("SBUIController") sharedInstanceIfExists];
     int batteryCharging = [SB isOnAC];
@@ -497,6 +559,30 @@ static void getBattery(){
     int ramPhysical = ramDataForType(-1);
     NSString* battery = [NSString stringWithFormat:@"var batteryPercent = %d, batteryCharging = %d, ramFree = %d, ramUsed = %d, ramAvailable = %d, ramPhysical = %d;", batteryPercent, batteryCharging, ramFree, ramUsed, ramAvailable, ramPhysical];
     update(battery, @"battery");
+
+    //system
+    NSString *systemVersion = [UIDevice currentDevice].systemVersion;
+
+    NSString *freakinName = [[NSString stringWithFormat:@"%@",[[UIDevice currentDevice] name]] stringByReplacingOccurrencesOfString:@"'" withString:@""];
+
+    NSString *formatStringForHours = [NSDateFormatter dateFormatFromTemplate:@"j" options:0 locale:[NSLocale currentLocale]];
+    NSRange containsA = [formatStringForHours rangeOfString:@"a"];
+    BOOL hasAMPM = containsA.location != NSNotFound;
+    NSString *twentyFour;
+    
+    if(hasAMPM){
+        twentyFour = @"no";
+    }else{
+        twentyFour = @"yes";
+    }
+
+    NSString* system = [NSString stringWithFormat:@"var systemVersion = '%@', deviceName = '%@', twentyfourhour = '%@';", systemVersion, freakinName, twentyFour];
+    update(system, @"system");
+
+    //alarm
+    NSString* alarm = [NSString stringWithFormat:@"var alarmString = '%@', alarmTime = '%@', alarmHour = '%@', alarmMinute = '%@', alarmDay = '%@';", getAlarm(0), getAlarm(1), getAlarm(2), getAlarm(3), getAlarm(4)];
+    update(alarm, @"alarm");
+
     //getWeather();
     battery = nil;
 }
@@ -740,7 +826,7 @@ static void loadAllInfo(){
     }
     //next track window.location = 'xeninfo:nextrack';
     %new
-    -(void)nextrack{
+    -(void)nexttrack{
          [[objc_getClass("SBMediaController") sharedInstance] changeTrack:1];
     }
     //previous track window.location = 'xeninfo:prevtrack';
@@ -755,7 +841,16 @@ static void loadAllInfo(){
         @try{
             [[objc_getClass("UIApplication") sharedApplication] launchApplicationWithIdentifier:bundle suspended:NO];
         }@catch(NSException* err){
-            NSLog(@"FPPlus Launch Error%@", err);
+            NSLog(@"XenInfo Launch Error %@", err);
+        }
+    }
+
+    %new
+    -(void)openurl:(NSString *)path{
+        NSString* address = [NSString stringWithFormat:@"http://%@", path];
+        NSURL *urlPath = [NSURL URLWithString:address];
+        if ([[UIApplication sharedApplication] canOpenURL:urlPath]){
+            [[UIApplication sharedApplication] openURL:urlPath options:@{} completionHandler:nil];
         }
     }
 
@@ -829,6 +924,7 @@ static void loadAllInfo(){
 		Store the webviews Xen has placed.
 	*/
 	-(void)setWebView:(WKWebView *)arg1{
+        NSLog(@"XenInfos 1234tt");
 		%orig;
         hasWebview = YES;
 		if(!_webviews){
