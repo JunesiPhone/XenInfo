@@ -9,7 +9,7 @@
 #import "weather.h"
 #import <WebKit/WebKit.h>
 
-@interface XENHWebViewController : UIViewController <WKNavigationDelegate, UIWebViewDelegate> {
+@interface XENHWidgetController : UIViewController <WKNavigationDelegate, UIWebViewDelegate> {
 
     NSString* _baseString;
     BOOL _usingFallback;
@@ -817,7 +817,7 @@ static void loadAllInfo(){
 // }
 
 
-%hook XENHWebViewController
+%hook XENHWidgetController
 
     //play and pause window.location = 'xeninfo:playpause';
     %new
@@ -907,7 +907,7 @@ static void loadAllInfo(){
 		Called when widget is deselected in XenHTML settings also called when screen is unlocked.
 		We need to update our array so it doesn't pass info to it.
 	*/
-	-(void)unloadWKWebView{
+	-(void)_unloadWebView{
 		%orig;
 		if(_webviews && self.webView){
 			if([_webviews containsObject:self.webView]){
@@ -924,14 +924,15 @@ static void loadAllInfo(){
 		Store the webviews Xen has placed.
 	*/
 	-(void)setWebView:(WKWebView *)arg1{
-        NSLog(@"XenInfos 1234tt");
 		%orig;
-        hasWebview = YES;
-		if(!_webviews){
-			_webviews=[[NSMutableArray array] retain];
-		}
-		if(![_webviews containsObject:arg1]){
-		     [_webviews addObject:arg1];
-		}
+        if(arg1){
+            hasWebview = YES;
+            if(!_webviews){
+                _webviews=[[NSMutableArray array] retain];
+            }
+            if(![_webviews containsObject:arg1]){
+                 [_webviews addObject:arg1];
+            }
+        }
 	}
 %end
