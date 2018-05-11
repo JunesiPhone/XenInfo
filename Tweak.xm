@@ -8,6 +8,7 @@
 #import "substrate.h"
 #import "weather.h"
 #import <WebKit/WebKit.h>
+#import <sys/utsname.h> //device models
 
 @interface XENHWidgetController : UIViewController <WKNavigationDelegate, UIWebViewDelegate> {
 
@@ -106,6 +107,7 @@ static void sendWeather(City* city){
         NSString *naturalCondition;
 
         NSString *celsius = [[objc_getClass("WeatherPreferences") sharedPreferences] isCelsius] ? @"C" : @"F";
+        NSString *isDay = city.isDay ? @"true" : @"false";
 
         if ([city respondsToSelector:@selector(naturalLanguageDescription)]) {
             naturalCondition = [city naturalLanguageDescription];
@@ -139,6 +141,19 @@ static void sendWeather(City* city){
             [fcastArray addObject:dayForecasts];
         }
 
+        NSMutableDictionary *hourForecasts;
+        NSMutableArray *hfcastArray = [[NSMutableArray alloc] init];
+
+        for (HourlyForecast *hour in city.hourlyForecasts) {
+            int temp = getIntFromWFTemp([hour valueForKey:@"temperature"], city);
+            hourForecasts = [[NSMutableDictionary alloc] init];
+            [hourForecasts setValue:hour.time forKey:@"time"];
+            [hourForecasts setValue:[NSString stringWithFormat:@"%llu",hour.conditionCode] forKey:@"conditionCode"];
+            [hourForecasts setValue:[NSNumber numberWithInt:temp] forKey:@"temperature"];
+            [hourForecasts setValue:[NSNumber numberWithInt:hour.percentPrecipitation] forKey:@"percentPrecipitation"];
+            [hourForecasts setValue:[NSNumber numberWithInt:hour.hourIndex] forKey:@"hourIndex"];
+            [hfcastArray addObject:hourForecasts];
+        }
 
         [weatherInfo setValue:city.name forKey:@"city"];
         [weatherInfo setValue:[NSNumber numberWithInt:temp] forKey:@"temperature"];
@@ -150,6 +165,7 @@ static void sendWeather(City* city){
 
         [weatherInfo setValue:city.locationID forKey:@"latlong"];
         [weatherInfo setValue:celsius forKey:@"celsius"];
+        [weatherInfo setValue:isDay forKey:@"isDay"];
         [weatherInfo setValue:[NSString stringWithFormat:@"%llu",city.conditionCode] forKey:@"conditionCode"];
         [weatherInfo setValue:[NSString stringWithFormat:@"%@",city.updateTimeString] forKey:@"updateTimeString"];
         [weatherInfo setValue:[NSString stringWithFormat:@"%d",(int)roundf(city.humidity)] forKey:@"humidity"];
@@ -162,6 +178,11 @@ static void sendWeather(City* city){
         [weatherInfo setValue:[NSString stringWithFormat:@"%llu",city.sunsetTime] forKey:@"sunsetTime"];
         [weatherInfo setValue:[NSString stringWithFormat:@"%llu",city.sunriseTime] forKey:@"sunriseTime"];
         [weatherInfo setValue:[NSString stringWithFormat:@"%d", city.precipitationForecast] forKey:@"precipitationForecast"];
+        [weatherInfo setValue:[NSString stringWithFormat:@"%d", (int)roundf(city.pressure)] forKey:@"pressure"];
+        [weatherInfo setValue:[NSString stringWithFormat:@"%d", (int)roundf(city.precipitationPast24Hours)] forKey:@"precipitation24hr"];
+        [weatherInfo setValue:[NSString stringWithFormat:@"%d", (int)roundf(city.heatIndex)] forKey:@"heatIndex"];
+        [weatherInfo setValue:[NSString stringWithFormat:@"%d", (int)roundf(city.moonPhase)] forKey:@"moonPhase"];
+        [weatherInfo setValue:[NSString stringWithFormat:@"%@",city.cityAndState] forKey:@"cityState"];
 
         if([[city hourlyForecasts] count] > 0){
             HourlyForecast* precip = [city hourlyForecasts][0];
@@ -180,6 +201,11 @@ static void sendWeather(City* city){
         update(finalObj, @"weather");
 
         update(lowHiBS, @"weather");
+
+        dayForecasts = nil;
+        hourForecasts = nil;
+        fcastArray = nil;
+        hfcastArray = nil;
     }
 }
 
@@ -487,8 +513,95 @@ static void getStatusbar(){
     update(statusbar, @"statusbar");
 }
 
+//http://theiphonewiki.com/wiki/Models
+static id deviceName(){
+    struct utsname systemInfo;
+    uname(&systemInfo);
+    NSString *machineName = [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding];
+    NSDictionary *commonNamesDictionary =
+    @{
+      @"i386":     @"i386 Simulator",
+      @"x86_64":   @"x86_64 Simulator",
 
+      @"iPhone1,1":    @"iPhone",
+      @"iPhone1,2":    @"iPhone 3G",
+      @"iPhone2,1":    @"iPhone 3GS",
+      @"iPhone3,1":    @"iPhone 4",
+      @"iPhone3,2":    @"iPhone 4",
+      @"iPhone3,3":    @"iPhone 4",
+      @"iPhone4,1":    @"iPhone 4S",
+      @"iPhone5,1":    @"iPhone 5",
+      @"iPhone5,2":    @"iPhone 5",
+      @"iPhone5,3":    @"iPhone 5c",
+      @"iPhone5,4":    @"iPhone 5c",
+      @"iPhone6,1":    @"iPhone 5s",
+      @"iPhone6,2":    @"iPhone 5s",
 
+      @"iPhone7,1":    @"iPhone 6+",
+      @"iPhone7,2":    @"iPhone 6",
+
+      @"iPhone8,1":    @"iPhone 6S",
+      @"iPhone8,2":    @"iPhone 6S+",
+      @"iPhone8,4":    @"iPhone SE",
+      @"iPhone9,1":    @"iPhone 7",
+      @"iPhone9,2":    @"iPhone 7+",
+      @"iPhone9,3":    @"iPhone 7",
+      @"iPhone9,4":    @"iPhone 7+",
+
+      @"iPhone10,1": @"iPhone 8",
+      @"iPhone10,4": @"iPhone 8",
+
+      @"iPhone10,2": @"iPhone 8+",
+      @"iPhone10,5": @"iPhone 8+",
+
+      @"iPhone10,3": @"iPhone X",
+      @"iPhone10,6": @"iPhone X",
+
+      @"iPad1,1":  @"iPad",
+      @"iPad2,1":  @"iPad 2",
+      @"iPad2,2":  @"iPad 2",
+      @"iPad2,3":  @"iPad 2",
+      @"iPad2,4":  @"iPad 2",
+      @"iPad2,5":  @"iPad Mini 1G ",
+      @"iPad2,6":  @"iPad Mini 1G ",
+      @"iPad2,7":  @"iPad Mini 1G ",
+      @"iPad3,1":  @"iPad 3",
+      @"iPad3,2":  @"iPad 3",
+      @"iPad3,3":  @"iPad 3",
+      @"iPad3,4":  @"iPad 4",
+      @"iPad3,5":  @"iPad 4",
+      @"iPad3,6":  @"iPad 4",
+
+      @"iPad4,1":  @"iPad Air",
+      @"iPad4,2":  @"iPad Air",
+      @"iPad4,3":  @"iPad Air",
+
+      @"iPad5,3":  @"iPad Air 2 ",
+      @"iPad5,4":  @"iPad Air 2 ",
+
+      @"iPad4,4":  @"iPad Mini 2G ",
+      @"iPad4,5":  @"iPad Mini 2G ",
+      @"iPad4,6":  @"iPad Mini 2G ",
+
+      @"iPad4,7":  @"iPad Mini 3G ",
+      @"iPad4,8":  @"iPad Mini 3G ",
+      @"iPad4,9":  @"iPad Mini 3G ",
+
+      @"iPod1,1":  @"iPod 1st Gen",
+      @"iPod2,1":  @"iPod 2nd Gen",
+      @"iPod3,1":  @"iPod 3rd Gen",
+      @"iPod4,1":  @"iPod 4th Gen",
+      @"iPod5,1":  @"iPod 5th Gen",
+      @"iPod7,1":  @"iPod 6th Gen",
+      };
+
+    NSString *deviceName = commonNamesDictionary[machineName];
+    if (deviceName == nil) {
+        deviceName = machineName;
+    }
+    commonNamesDictionary = nil;
+    return deviceName;
+}
 
 static id getAlarm(int info){
     NSString* alarmInfo = @"";
@@ -576,7 +689,7 @@ static void getBattery(){
         twentyFour = @"yes";
     }
 
-    NSString* system = [NSString stringWithFormat:@"var systemVersion = '%@', deviceName = '%@', twentyfourhour = '%@';", systemVersion, freakinName, twentyFour];
+    NSString* system = [NSString stringWithFormat:@"var systemVersion = '%@', deviceName = '%@', twentyfourhour = '%@', deviceType = '%@';", systemVersion, freakinName, twentyFour, deviceName()];
     update(system, @"system");
 
     //alarm

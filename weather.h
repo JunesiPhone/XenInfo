@@ -55,7 +55,10 @@
 - (BOOL)isDay;
 -(id)naturalLanguageDescription;
 - (unsigned int)bigIcon;
+-(id)displayName;
 -(void)update;
+-(id)cityAndState;
+-(BOOL)isDay;
 @end
 
 @interface DayForecast : NSObject
@@ -68,6 +71,12 @@
 
 @interface HourlyForecast : NSObject
 @property (nonatomic) float percentPrecipitation;
+@property (assign,nonatomic) unsigned long long eventType;              //@synthesize eventType=_eventType - In the implementation block
+@property (nonatomic,copy) NSString * time;                             //@synthesize time=_time - In the implementation block
+@property (assign,nonatomic) long long hourIndex;                       //@synthesize hourIndex=_hourIndex - In the implementation block
+@property (nonatomic,retain) NSString * temperature;               //@synthesize temperature=_temperature - In the implementation block
+@property (nonatomic,copy) NSString * forecastDetail;                   //@synthesize forecastDetail=_forecastDetail - In the implementation block
+@property (assign,nonatomic) long long conditionCode;
 - (float)percentPrecipitation;
 @end;
 
