@@ -163,7 +163,11 @@
     -(void)resetUpdatesToLocalNotificationsCache;
 @end
 
-@interface UIConcreteLocalNotification
+@interface UIConcreteLocalNotification{
+    NSTimeZone * timeZone;
+}
+- (id)timeZone;
+-(id)nextFireDateAfterDate:(id)arg1 localTimeZone:(id)arg2;
 - (id)fireDate;
 -(id)userInfo;
 @end

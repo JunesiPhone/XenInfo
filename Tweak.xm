@@ -10,6 +10,22 @@
 #import <WebKit/WebKit.h>
 #import <sys/utsname.h> //device models
 
+//old XenHTML
+@interface XENHWebViewController : UIViewController <WKNavigationDelegate, UIWebViewDelegate> {
+
+    NSString* _baseString;
+    BOOL _usingFallback;
+    NSDictionary* _metadata;
+    BOOL _isFullscreen;
+    int _variant;
+    WKWebView* _webView;
+    UIWebView* _fallbackWebView;
+
+}
+@property (nonatomic,retain) WKWebView * webView;
+@end
+
+//new XenHTML
 @interface XENHWidgetController : UIViewController <WKNavigationDelegate, UIWebViewDelegate> {
 
     NSString* _baseString;
@@ -616,7 +632,10 @@ static id getAlarm(int info){
     alarms = [manager scheduledLocalNotificationsCache];
     if(alarms){
         for(UIConcreteLocalNotification *alarm in alarms){
-            int day = (int)[[NSCalendar currentCalendar] components:NSCalendarUnitDay fromDate:alarm.fireDate].day;
+            id nextFireDate = [alarm nextFireDateAfterDate:[NSDate date] localTimeZone:alarm.timeZone];
+            NSLog(@"XenInfoS %@", nextFireDate);
+            int day = (int)[[NSCalendar currentCalendar] components:NSCalendarUnitYear|NSCalendarUnitMonth|NSCalendarUnitDay|NSCalendarUnitHour|NSCalendarUnitWeekday|NSCalendarUnitMinute fromDate:nextFireDate].weekday;
+            NSLog(@"XenInfoS %d", day);
             int hr = [[alarm.userInfo valueForKey:@"hour"] intValue];
             NSString *mn = [NSString stringWithFormat:@"%@", [alarm.userInfo valueForKey:@"minute"]];
             NSString *pm;
@@ -651,7 +670,7 @@ static id getAlarm(int info){
                         alarmInfo = [NSString stringWithFormat:@"%@", mn];
                         break;
                     case 4:
-                        alarmInfo = [NSString stringWithFormat:@"%d", day];
+                        alarmInfo = [NSString stringWithFormat:@"%d", day - 1];
                         break;
                     default:
                         break;
@@ -929,7 +948,128 @@ static void loadAllInfo(){
 // 	[[NSNotificationCenter defaultCenter] removeObserver:sbObserver];
 // }
 
+//new Old XENHTML
+%hook XENHWebViewController
+    //play and pause window.location = 'xeninfo:playpause';
+    %new
+    -(void)playpause{
+        [[objc_getClass("SBMediaController") sharedInstance] togglePlayPause];
+    }
+    //next track window.location = 'xeninfo:nextrack';
+    %new
+    -(void)nexttrack{
+         [[objc_getClass("SBMediaController") sharedInstance] changeTrack:1];
+    }
+    //previous track window.location = 'xeninfo:prevtrack';
+    %new
+    -(void)prevtrack{
+        [[objc_getClass("SBMediaController") sharedInstance] changeTrack:-1];
+    }
 
+    //open app from XenHTML widget window.location = 'xeninfo:openapp:com.spotify.client';
+    %new
+    -(void)openapp:(NSString *)bundle{
+        @try{
+            [[objc_getClass("UIApplication") sharedApplication] launchApplicationWithIdentifier:bundle suspended:NO];
+        }@catch(NSException* err){
+            NSLog(@"XenInfo Launch Error %@", err);
+        }
+    }
+
+    %new
+    -(void)openurl:(NSString *)path{
+        NSString* address = [NSString stringWithFormat:@"http://%@", path];
+        NSURL *urlPath = [NSURL URLWithString:address];
+        if ([[UIApplication sharedApplication] canOpenURL:urlPath]){
+            [[UIApplication sharedApplication] openURL:urlPath options:@{} completionHandler:nil];
+        }
+    }
+
+    //pretty strange I must add this, but I did.
+    %new
+    - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+        NSURLRequest *request = navigationAction.request;
+        NSString *url = [[request URL]absoluteString];
+        
+        if ([url hasPrefix:@"xeninfo:"]) { //devs will call window.location = 'xeninfo:playpause'; or window.location = 'xeninfo:openapp:com.spotify.client';
+            NSArray *components = [url componentsSeparatedByString:@":"];
+            NSString *function = [components objectAtIndex:1];
+            @try {
+                if([components count] > 2){ //check it has more than one component if so pass the parameter, if not just call the method
+                    NSString *func = [NSString stringWithFormat:@"%@:",[components objectAtIndex:1]];
+                    NSString *param = [NSString stringWithFormat:@"%@",[components objectAtIndex:2]];
+                    if([self respondsToSelector:NSSelectorFromString(func)]){
+                        [self performSelector:NSSelectorFromString(func)
+                                   withObject:param
+                                   afterDelay:0];
+                    }
+                }else{
+                    if([self respondsToSelector:NSSelectorFromString(function)]){
+                        [self performSelector:NSSelectorFromString(function)
+                                   withObject:nil
+                                   afterDelay:0];
+                    }
+                }
+            } @catch (NSException *exception) {
+                NSLog(@"XenInfo - Error in WKWebView Decide Policy %@",exception);
+            }
+            //decisionHandler(WKNavigationActionPolicyCancel);
+        }
+        decisionHandler(WKNavigationActionPolicyAllow);
+    }
+
+    /*
+        Detects when a webview did finish loading completely.
+        This will inject info multiple times. Not very efficient
+        Delay 0.5s to load info immediately after respring.
+    */
+    -(void)webView:(id)arg1 didFinishNavigation:(id)arg2{
+        %orig;
+        WKWebView* wb = arg1;
+        if(!wb.isLoading){
+            dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.5);
+            dispatch_after(delay, dispatch_get_main_queue(), ^(void){
+                loadAllInfo();
+            });
+        }
+    }
+
+    /*
+        Called when widget is deselected in XenHTML settings also called when screen is unlocked.
+        We need to update our array so it doesn't pass info to it.
+    */
+    -(void)unloadWKWebView{
+        %orig;
+        if(_webviews && self.webView){
+            if([_webviews containsObject:self.webView]){
+                NSUInteger index = [_webviews indexOfObject:self.webView];
+                [_webviews removeObjectAtIndex:index];
+            }
+        }
+        if([_webviews count] == 0){
+            hasWebview = NO;
+        }
+    }
+
+    /*
+        Store the webviews Xen has placed.
+    */
+    -(void)setWebView:(WKWebView *)arg1{
+        %orig;
+        if(arg1){
+            hasWebview = YES;
+            if(!_webviews){
+                _webviews=[[NSMutableArray array] retain];
+            }
+            if(![_webviews containsObject:arg1]){
+                 [_webviews addObject:arg1];
+            }
+        }
+    }
+%end
+
+
+//new XENHTML
 %hook XENHWidgetController
 
     //play and pause window.location = 'xeninfo:playpause';
