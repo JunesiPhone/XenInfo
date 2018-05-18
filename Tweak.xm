@@ -161,13 +161,18 @@ static void sendWeather(City* city){
         NSMutableArray *hfcastArray = [[NSMutableArray alloc] init];
 
         for (HourlyForecast *hour in city.hourlyForecasts) {
-            int temp = getIntFromWFTemp([hour valueForKey:@"temperature"], city);
+            int temp = 0;
+
+            if(deviceVersion >= 10){ //doesn't exist < iOS 10
+                temp = getIntFromWFTemp([hour valueForKey:@"temperature"], city);
+            }
+            
             hourForecasts = [[NSMutableDictionary alloc] init];
-            [hourForecasts setValue:hour.time forKey:@"time"];
-            [hourForecasts setValue:[NSString stringWithFormat:@"%llu",hour.conditionCode] forKey:@"conditionCode"];
-            [hourForecasts setValue:[NSNumber numberWithInt:temp] forKey:@"temperature"];
-            [hourForecasts setValue:[NSNumber numberWithInt:hour.percentPrecipitation] forKey:@"percentPrecipitation"];
-            [hourForecasts setValue:[NSNumber numberWithInt:hour.hourIndex] forKey:@"hourIndex"];
+            [hourForecasts setValue:hour.time forKey:@"time"]; //7.0 - 11.1.2
+            [hourForecasts setValue:[NSString stringWithFormat:@"%llu",hour.conditionCode] forKey:@"conditionCode"]; //7.0 - 11.1.2
+            [hourForecasts setValue:[NSNumber numberWithInt:temp] forKey:@"temperature"]; //10.1.1 - 11.1.2
+            [hourForecasts setValue:[NSNumber numberWithInt:hour.percentPrecipitation] forKey:@"percentPrecipitation"]; //6.0 - 11.1.2
+            [hourForecasts setValue:[NSNumber numberWithInt:hour.hourIndex] forKey:@"hourIndex"]; //7.0 - 11.1.2
             [hfcastArray addObject:hourForecasts];
         }
 
@@ -178,6 +183,7 @@ static void sendWeather(City* city){
         [weatherInfo setValue:naturalCondition forKey:@"naturalCondition"];
 
         [weatherInfo setValue:fcastArray forKey:@"dayForecasts"];
+        [weatherInfo setValue:hfcastArray forKey:@"hourlyForecasts"];
 
         [weatherInfo setValue:city.locationID forKey:@"latlong"];
         [weatherInfo setValue:celsius forKey:@"celsius"];
@@ -195,7 +201,7 @@ static void sendWeather(City* city){
         [weatherInfo setValue:[NSString stringWithFormat:@"%llu",city.sunriseTime] forKey:@"sunriseTime"];
         [weatherInfo setValue:[NSString stringWithFormat:@"%d", city.precipitationForecast] forKey:@"precipitationForecast"];
         [weatherInfo setValue:[NSString stringWithFormat:@"%d", (int)roundf(city.pressure)] forKey:@"pressure"];
-        [weatherInfo setValue:[NSString stringWithFormat:@"%d", (int)roundf(city.precipitationPast24Hours)] forKey:@"precipitation24hr"];
+        [weatherInfo setValue:[NSNumber numberWithFloat:city.precipitationPast24Hours] forKey:@"precipitation24hr"];
         [weatherInfo setValue:[NSString stringWithFormat:@"%d", (int)roundf(city.heatIndex)] forKey:@"heatIndex"];
         [weatherInfo setValue:[NSString stringWithFormat:@"%d", (int)roundf(city.moonPhase)] forKey:@"moonPhase"];
         [weatherInfo setValue:[NSString stringWithFormat:@"%@",city.cityAndState] forKey:@"cityState"];
