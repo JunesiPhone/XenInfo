@@ -353,6 +353,7 @@ static void getWeather(){
 		dispatch_after(delay, dispatch_get_main_queue(), ^(void){
 			lastWeatherUpdate = 1;
 		});
+        NSLog(@"XenInfo: Weather updating..");
 		refreshWeather();
 	}else{
         loadCurrentWeather();
@@ -639,9 +640,9 @@ static id getAlarm(int info){
     if(alarms){
         for(UIConcreteLocalNotification *alarm in alarms){
             id nextFireDate = [alarm nextFireDateAfterDate:[NSDate date] localTimeZone:alarm.timeZone];
-            NSLog(@"XenInfoS %@", nextFireDate);
+            //NSLog(@"XenInfoS %@", nextFireDate);
             int day = (int)[[NSCalendar currentCalendar] components:NSCalendarUnitYear|NSCalendarUnitMonth|NSCalendarUnitDay|NSCalendarUnitHour|NSCalendarUnitWeekday|NSCalendarUnitMinute fromDate:nextFireDate].weekday;
-            NSLog(@"XenInfoS %d", day);
+            //NSLog(@"XenInfoS %d", day);
             int hr = [[alarm.userInfo valueForKey:@"hour"] intValue];
             NSString *mn = [NSString stringWithFormat:@"%@", [alarm.userInfo valueForKey:@"minute"]];
             NSString *pm;
@@ -721,7 +722,7 @@ static void getBattery(){
     NSString* alarm = [NSString stringWithFormat:@"var alarmString = '%@', alarmTime = '%@', alarmHour = '%@', alarmMinute = '%@', alarmDay = '%@';", getAlarm(0), getAlarm(1), getAlarm(2), getAlarm(3), getAlarm(4)];
     update(alarm, @"alarm");
 
-    //getWeather();
+    getWeather();
     battery = nil;
 }
 
