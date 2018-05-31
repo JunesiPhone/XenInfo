@@ -24,6 +24,9 @@
 		C978F96420C05BBC005C20B8 /* XIWidgetDataProvider-Protocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "XIWidgetDataProvider-Protocol.h"; sourceTree = "<group>"; };
 		C978F96520C05EFF005C20B8 /* Tweak.xm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = Tweak.xm; sourceTree = "<group>"; };
 		C978F96720C08453005C20B8 /* XIMusicHeaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIMusicHeaders.h; sourceTree = "<group>"; };
+		C9E16FCF20C08F5B00BA0031 /* XIInfoStats.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIInfoStats.h; sourceTree = "<group>"; };
+		C9E16FD020C08F5C00BA0031 /* XIInfoStats.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XIInfoStats.m; sourceTree = "<group>"; };
+		C9E16FD120C0935A00BA0031 /* XIInfoStatsHeaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIInfoStatsHeaders.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -43,7 +46,8 @@
 				C978F95120C057BE005C20B8 /* Tweak-old.xm */,
 				C978F96520C05EFF005C20B8 /* Tweak.xm */,
 				C978F95B20C05B76005C20B8 /* Internal */,
-				C978F95A20C05B40005C20B8 /* Battery,RAM */,
+				C9E16FCE20C08F4400BA0031 /* Battery */,
+				C978F95A20C05B40005C20B8 /* System */,
 				C978F95920C05B17005C20B8 /* Music */,
 				C978F95820C05B11005C20B8 /* Weather */,
 			);
@@ -79,13 +83,13 @@
 			path = Music;
 			sourceTree = "<group>";
 		};
-		C978F95A20C05B40005C20B8 /* Battery,RAM */ = {
+		C978F95A20C05B40005C20B8 /* System */ = {
 			isa = PBXGroup;
 			children = (
 				C978F95E20C05B93005C20B8 /* XISystem.h */,
 				C978F95F20C05B93005C20B8 /* XISystem.m */,
 			);
-			path = "Battery,RAM";
+			path = System;
 			sourceTree = "<group>";
 		};
 		C978F95B20C05B76005C20B8 /* Internal */ = {
@@ -96,6 +100,16 @@
 				C978F96420C05BBC005C20B8 /* XIWidgetDataProvider-Protocol.h */,
 			);
 			path = Internal;
+			sourceTree = "<group>";
+		};
+		C9E16FCE20C08F4400BA0031 /* Battery */ = {
+			isa = PBXGroup;
+			children = (
+				C9E16FCF20C08F5B00BA0031 /* XIInfoStats.h */,
+				C9E16FD020C08F5C00BA0031 /* XIInfoStats.m */,
+				C9E16FD120C0935A00BA0031 /* XIInfoStatsHeaders.h */,
+			);
+			path = Battery;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

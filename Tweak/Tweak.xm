@@ -146,6 +146,23 @@
 %end
 
 ///////////////////////////////////////////////////////////////
+#pragma mark Battery Information Hooks
+///////////////////////////////////////////////////////////////
+
+#import "Battery/XIInfoStats.h"
+
+%hook SBUIController
+
+- (void)updateBatteryState:(id)arg1{
+    %orig;
+    
+    // Forward message that new data is available
+    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIInfoStats topic]];
+}
+
+%end
+
+///////////////////////////////////////////////////////////////
 #pragma mark Music Hooks
 ///////////////////////////////////////////////////////////////
 

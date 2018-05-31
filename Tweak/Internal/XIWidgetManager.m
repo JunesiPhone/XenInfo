@@ -12,7 +12,8 @@
 /*            ADD NEW DATA PROVIDER HEADERS HERE            */
 /************************************************************/
 
-#import "../Battery,RAM/XISystem.h"
+#import "../Battery/XIInfoStats.h"
+#import "../System/XISystem.h"
 #import "../Music/XIMusic.h"
 #import "../Weather/XIWeather.h"
 
@@ -85,7 +86,11 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
     /*            ADD NEW DATA PROVIDERS HERE            */
     /*****************************************************/
     
-    // System (Battery and RAM)
+    // InfoStats
+    XIInfoStats *isProvider = [[XIInfoStats alloc] init];
+    [dict setObject:isProvider forKey:[XIInfoStats topic]];
+    
+    // System
     XISystem *systemProvider = [[XISystem alloc] init];
     [dict setObject:systemProvider forKey:[XISystem topic]];
     
