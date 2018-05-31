@@ -107,6 +107,9 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
 
 - (void)registerWidget:(WKWebView*)widget {
     [self.registeredWidgets addObject:widget];
+    
+    // Give this widget all the currently known data!
+    [self _updateWidgetWithCachedInformation:widget];
 }
 
 - (void)unregisterWidget:(WKWebView*)widget {
@@ -137,6 +140,18 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
         XIMusic *musicProvider = [self.widgetDataProviders objectForKey:[XIMusic topic]];
         [musicProvider retreatTrack];
         
+    } else if ([action isEqualToString:@"openapp"]) {
+        
+        // Handle in System provider
+        XISystem *systemProvider = [self.widgetDataProviders objectForKey:[XISystem topic]];
+        [systemProvider openApplicationWithBundleIdentifier:parameter];
+        
+    } else if ([action isEqualToString:@"openurl"]) {
+        
+        // Handle in System provider
+        XISystem *systemProvider = [self.widgetDataProviders objectForKey:[XISystem topic]];
+        [systemProvider openURL:parameter];
+        
     }
     
     
@@ -162,7 +177,19 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
 }
 
 - (void)_updateWidgetWithCachedInformation:(WKWebView*)widget {
-    // TODO.
+    // Give this widget the current known data!
+    for (NSString *topic in self.widgetDataProviders.allKeys) {
+        id<XIWidgetDataProvider> provider = [self.widgetDataProviders objectForKey:topic];
+        
+        NSString *cachedData = [provider requestCachedData];
+        
+        // Update JS variables
+        [widget evaluateJavaScript:cachedData completionHandler:^(id object, NSError *error) {}];
+        
+        // Notify of new change to variables
+        NSString* function = [NSString stringWithFormat:@"mainUpdate('%@')", topic];
+        [widget evaluateJavaScript:function completionHandler:^(id object, NSError *error) {}];
+    }
 }
 
 @end

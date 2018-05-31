@@ -55,6 +55,7 @@
 - (void)requestRefresh {
     // Called for new battery information being available.
     
+    // Pull new battery data
     SBUIController *uiController = [objc_getClass("SBUIController") sharedInstance];
     
     self.cachedBatteryPercent = [uiController batteryCapacityAsPercentage];
