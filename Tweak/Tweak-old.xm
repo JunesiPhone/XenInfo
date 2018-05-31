@@ -4,10 +4,11 @@
 #include <mach/mach.h>
 #import <mach/mach_host.h>
 #include <sys/sysctl.h>
-#import "headers.h"
-#import "substrate.h"
-#import "weather.h"
+#import "../include/headers.h"
+#import "../include/substrate.h"
+#import "../include/weather.h"
 #import <WebKit/WebKit.h>
+#import <UIKit/UIKit.h>
 #import <sys/utsname.h> //device models
 
 //old XenHTML

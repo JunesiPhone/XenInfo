@@ -1,5 +1,9 @@
 @class WebScriptObject;
 
+@interface UIApplication (iOS10)
+- (void)openURL:(NSURL *)url options:(NSDictionary<NSString *,id> *)options completionHandler:(void (^)(BOOL success))completion;
+@end
+
 @interface WebFrame : NSObject
 -(id)dataSource;
 @end

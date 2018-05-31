@@ -1,0 +1,300 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 48;
+	objects = {
+
+/* Begin PBXFileReference section */
+		C978F95120C057BE005C20B8 /* Tweak-old.xm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = "Tweak-old.xm"; sourceTree = "<group>"; };
+		C978F95220C05900005C20B8 /* control */ = {isa = PBXFileReference; lastKnownFileType = text; path = control; sourceTree = "<group>"; };
+		C978F95320C05900005C20B8 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		C978F95520C0593C005C20B8 /* headers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = headers.h; sourceTree = "<group>"; };
+		C978F95620C0593C005C20B8 /* weather.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = weather.h; sourceTree = "<group>"; };
+		C978F95720C0593C005C20B8 /* substrate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = substrate.h; sourceTree = "<group>"; };
+		C978F95C20C05B85005C20B8 /* XIWidgetManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIWidgetManager.h; sourceTree = "<group>"; };
+		C978F95D20C05B85005C20B8 /* XIWidgetManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XIWidgetManager.m; sourceTree = "<group>"; };
+		C978F95E20C05B93005C20B8 /* XISystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XISystem.h; sourceTree = "<group>"; };
+		C978F95F20C05B93005C20B8 /* XISystem.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XISystem.m; sourceTree = "<group>"; };
+		C978F96020C05B9B005C20B8 /* XIMusic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIMusic.h; sourceTree = "<group>"; };
+		C978F96120C05B9B005C20B8 /* XIMusic.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XIMusic.m; sourceTree = "<group>"; };
+		C978F96220C05BA4005C20B8 /* XIWeather.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIWeather.h; sourceTree = "<group>"; };
+		C978F96320C05BA4005C20B8 /* XIWeather.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XIWeather.m; sourceTree = "<group>"; };
+		C978F96420C05BBC005C20B8 /* XIWidgetDataProvider-Protocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "XIWidgetDataProvider-Protocol.h"; sourceTree = "<group>"; };
+		C978F96520C05EFF005C20B8 /* Tweak.xm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = Tweak.xm; sourceTree = "<group>"; };
+		C978F96720C08453005C20B8 /* XIMusicHeaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIMusicHeaders.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		C978F94520C056B6005C20B8 = {
+			isa = PBXGroup;
+			children = (
+				C978F95220C05900005C20B8 /* control */,
+				C978F95320C05900005C20B8 /* Makefile */,
+				C978F95420C0593C005C20B8 /* include */,
+				C978F95020C057BE005C20B8 /* Tweak */,
+			);
+			sourceTree = "<group>";
+		};
+		C978F95020C057BE005C20B8 /* Tweak */ = {
+			isa = PBXGroup;
+			children = (
+				C978F95120C057BE005C20B8 /* Tweak-old.xm */,
+				C978F96520C05EFF005C20B8 /* Tweak.xm */,
+				C978F95B20C05B76005C20B8 /* Internal */,
+				C978F95A20C05B40005C20B8 /* Battery,RAM */,
+				C978F95920C05B17005C20B8 /* Music */,
+				C978F95820C05B11005C20B8 /* Weather */,
+			);
+			path = Tweak;
+			sourceTree = "<group>";
+		};
+		C978F95420C0593C005C20B8 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				C978F95520C0593C005C20B8 /* headers.h */,
+				C978F95620C0593C005C20B8 /* weather.h */,
+				C978F95720C0593C005C20B8 /* substrate.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		C978F95820C05B11005C20B8 /* Weather */ = {
+			isa = PBXGroup;
+			children = (
+				C978F96220C05BA4005C20B8 /* XIWeather.h */,
+				C978F96320C05BA4005C20B8 /* XIWeather.m */,
+			);
+			path = Weather;
+			sourceTree = "<group>";
+		};
+		C978F95920C05B17005C20B8 /* Music */ = {
+			isa = PBXGroup;
+			children = (
+				C978F96020C05B9B005C20B8 /* XIMusic.h */,
+				C978F96120C05B9B005C20B8 /* XIMusic.m */,
+				C978F96720C08453005C20B8 /* XIMusicHeaders.h */,
+			);
+			path = Music;
+			sourceTree = "<group>";
+		};
+		C978F95A20C05B40005C20B8 /* Battery,RAM */ = {
+			isa = PBXGroup;
+			children = (
+				C978F95E20C05B93005C20B8 /* XISystem.h */,
+				C978F95F20C05B93005C20B8 /* XISystem.m */,
+			);
+			path = "Battery,RAM";
+			sourceTree = "<group>";
+		};
+		C978F95B20C05B76005C20B8 /* Internal */ = {
+			isa = PBXGroup;
+			children = (
+				C978F95C20C05B85005C20B8 /* XIWidgetManager.h */,
+				C978F95D20C05B85005C20B8 /* XIWidgetManager.m */,
+				C978F96420C05BBC005C20B8 /* XIWidgetDataProvider-Protocol.h */,
+			);
+			path = Internal;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXLegacyTarget section */
+		C978F94A20C056B6005C20B8 /* XenInfo */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "";
+			buildConfigurationList = C978F94D20C056B6005C20B8 /* Build configuration list for PBXLegacyTarget "XenInfo" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = "";
+			dependencies = (
+			);
+			name = XenInfo;
+			passBuildSettingsInEnvironment = 1;
+			productName = XenInfo;
+		};
+/* End PBXLegacyTarget section */
+
+/* Begin PBXProject section */
+		C978F94620C056B6005C20B8 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0910;
+				ORGANIZATIONNAME = "Matt Clarke";
+				TargetAttributes = {
+					C978F94A20C056B6005C20B8 = {
+						CreatedOnToolsVersion = 9.1;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = C978F94920C056B6005C20B8 /* Build configuration list for PBXProject "XenInfo" */;
+			compatibilityVersion = "Xcode 8.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = C978F94520C056B6005C20B8;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C978F94A20C056B6005C20B8 /* XenInfo */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+		C978F94B20C056B6005C20B8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+			};
+			name = Debug;
+		};
+		C978F94C20C056B6005C20B8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+			};
+			name = Release;
+		};
+		C978F94E20C056B6005C20B8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEBUGGING_SYMBOLS = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				THEOS = /opt/theos;
+				THEOS_MAKE_PATH = /opt/theos/makefiles;
+			};
+			name = Debug;
+		};
+		C978F94F20C056B6005C20B8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				THEOS = /opt/theos;
+				THEOS_MAKE_PATH = /opt/theos/makefiles;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C978F94920C056B6005C20B8 /* Build configuration list for PBXProject "XenInfo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C978F94B20C056B6005C20B8 /* Debug */,
+				C978F94C20C056B6005C20B8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C978F94D20C056B6005C20B8 /* Build configuration list for PBXLegacyTarget "XenInfo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C978F94E20C056B6005C20B8 /* Debug */,
+				C978F94F20C056B6005C20B8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C978F94620C056B6005C20B8 /* Project object */;
+}
