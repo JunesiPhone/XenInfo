@@ -55,10 +55,10 @@
 - (void)requestRefresh {
     // Called for new battery information being available.
     
-    SBUIController *uiController = [objc_getClass("SBUIController") sharedInstanceIfExists];
+    SBUIController *uiController = [objc_getClass("SBUIController") sharedInstance];
     
-    self.cachedBatteryPercent = [uiController isOnAC];
-    self.cachedBatteryCharging = [uiController batteryCapacityAsPercentage];
+    self.cachedBatteryPercent = [uiController batteryCapacityAsPercentage];
+    self.cachedBatteryCharging = [uiController isOnAC];
     
     // Send the new data through to widgets
     [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIInfoStats topic]];
@@ -80,6 +80,12 @@
                                                              selector:@selector(_onUpdateRAM:)
                                                              userInfo:nil
                                                               repeats:YES];
+        
+        // Do an initial update of battery information
+        SBUIController *uiController = [objc_getClass("SBUIController") sharedInstance];
+        
+        self.cachedBatteryPercent = [uiController batteryCapacityAsPercentage];
+        self.cachedBatteryCharging = [uiController isOnAC];
     }
     
     return self;

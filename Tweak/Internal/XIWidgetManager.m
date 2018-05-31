@@ -86,7 +86,7 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
     /*            ADD NEW DATA PROVIDERS HERE            */
     /*****************************************************/
     
-    // InfoStats
+    // InfoStats (battery and RAM)
     XIInfoStats *isProvider = [[XIInfoStats alloc] init];
     [dict setObject:isProvider forKey:[XIInfoStats topic]];
     
