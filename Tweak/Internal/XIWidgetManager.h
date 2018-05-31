@@ -40,4 +40,9 @@ extern "C" {
 // Called to request an update for a data provider from a hooked method.
 - (void)requestRefreshForDataProviderTopic:(NSString*)topic;
 
+// Called when the device enters sleep mode
+- (void)noteDeviceDidEnterSleep;
+// Called when the device exits sleep mode
+- (void)noteDeviceDidExitSleep;
+
 @end

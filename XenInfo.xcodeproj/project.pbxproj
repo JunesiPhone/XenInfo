@@ -27,6 +27,14 @@
 		C9E16FCF20C08F5B00BA0031 /* XIInfoStats.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIInfoStats.h; sourceTree = "<group>"; };
 		C9E16FD020C08F5C00BA0031 /* XIInfoStats.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XIInfoStats.m; sourceTree = "<group>"; };
 		C9E16FD120C0935A00BA0031 /* XIInfoStatsHeaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIInfoStatsHeaders.h; sourceTree = "<group>"; };
+		C9E16FD620C09EB900BA0031 /* XIEvents.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIEvents.h; sourceTree = "<group>"; };
+		C9E16FD720C09EB900BA0031 /* XIEvents.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XIEvents.m; sourceTree = "<group>"; };
+		C9E16FD820C09EC300BA0031 /* XIReminders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIReminders.h; sourceTree = "<group>"; };
+		C9E16FD920C09EC300BA0031 /* XIReminders.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XIReminders.m; sourceTree = "<group>"; };
+		C9E16FDA20C09ECA00BA0031 /* XIAlarms.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIAlarms.h; sourceTree = "<group>"; };
+		C9E16FDB20C09ECA00BA0031 /* XIAlarms.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XIAlarms.m; sourceTree = "<group>"; };
+		C9E16FDC20C09EDA00BA0031 /* XIStatusBar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIStatusBar.h; sourceTree = "<group>"; };
+		C9E16FDD20C09EDA00BA0031 /* XIStatusBar.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XIStatusBar.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -46,6 +54,10 @@
 				C978F95120C057BE005C20B8 /* Tweak-old.xm */,
 				C978F96520C05EFF005C20B8 /* Tweak.xm */,
 				C978F95B20C05B76005C20B8 /* Internal */,
+				C9E16FD520C09EA200BA0031 /* Events */,
+				C9E16FD420C09E8F00BA0031 /* Reminders */,
+				C9E16FD320C09E8A00BA0031 /* Alarms */,
+				C9E16FD220C09E8100BA0031 /* Statusbar */,
 				C9E16FCE20C08F4400BA0031 /* Battery */,
 				C978F95A20C05B40005C20B8 /* System */,
 				C978F95920C05B17005C20B8 /* Music */,
@@ -110,6 +122,42 @@
 				C9E16FD120C0935A00BA0031 /* XIInfoStatsHeaders.h */,
 			);
 			path = Battery;
+			sourceTree = "<group>";
+		};
+		C9E16FD220C09E8100BA0031 /* Statusbar */ = {
+			isa = PBXGroup;
+			children = (
+				C9E16FDC20C09EDA00BA0031 /* XIStatusBar.h */,
+				C9E16FDD20C09EDA00BA0031 /* XIStatusBar.m */,
+			);
+			path = Statusbar;
+			sourceTree = "<group>";
+		};
+		C9E16FD320C09E8A00BA0031 /* Alarms */ = {
+			isa = PBXGroup;
+			children = (
+				C9E16FDA20C09ECA00BA0031 /* XIAlarms.h */,
+				C9E16FDB20C09ECA00BA0031 /* XIAlarms.m */,
+			);
+			path = Alarms;
+			sourceTree = "<group>";
+		};
+		C9E16FD420C09E8F00BA0031 /* Reminders */ = {
+			isa = PBXGroup;
+			children = (
+				C9E16FD820C09EC300BA0031 /* XIReminders.h */,
+				C9E16FD920C09EC300BA0031 /* XIReminders.m */,
+			);
+			path = Reminders;
+			sourceTree = "<group>";
+		};
+		C9E16FD520C09EA200BA0031 /* Events */ = {
+			isa = PBXGroup;
+			children = (
+				C9E16FD620C09EB900BA0031 /* XIEvents.h */,
+				C9E16FD720C09EB900BA0031 /* XIEvents.m */,
+			);
+			path = Events;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

@@ -473,6 +473,7 @@ static int getSysInfo(uint typeSpecifier){
     sysctl(mib, 2, &results, &size, NULL, 0);
     return (int) results;
 }
+
 static int ramDataForType(int type){
 	mach_port_t host_port;
     mach_msg_type_number_t host_size;

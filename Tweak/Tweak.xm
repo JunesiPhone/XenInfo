@@ -81,9 +81,9 @@
     NSURLRequest *request = navigationAction.request;
     NSString *url = [[request URL] absoluteString];
     
-    if ([url hasPrefix:@"xeninfo:"]) { //devs will call window.location = 'xeninfo:playpause'; or window.location = 'xeninfo:openapp:com.spotify.client';
+    if ([url hasPrefix:@"xeninfo:"]) {
         NSArray *components = [url componentsSeparatedByString:@":"];
-        
+
         NSString *function = [components objectAtIndex:1];
         
         // Pass through the function and parameters through to the widget manager.

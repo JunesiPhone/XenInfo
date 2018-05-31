@@ -16,6 +16,10 @@
 #import "../System/XISystem.h"
 #import "../Music/XIMusic.h"
 #import "../Weather/XIWeather.h"
+#import "../Events/XIEvents.h"
+#import "../Reminders/XIReminders.h"
+#import "../Alarms/XIAlarms.h"
+#import "../Statusbar/XIStatusBar.h"
 
 // Debug logging with nice printing
 void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSString *format, ...) {
@@ -101,6 +105,23 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
     // Weather
     XIWeather *weatherProvider = [[XIWeather alloc] init];
     [dict setObject:weatherProvider forKey:[XIWeather topic]];
+    
+    // Events
+    XIEvents *eventsProvider = [[XIEvents alloc] init];
+    [dict setObject:eventsProvider forKey:[XIEvents topic]];
+    
+    // Reminders
+    XIReminders *remindersProvider = [[XIReminders alloc] init];
+    [dict setObject:remindersProvider forKey:[XIReminders topic]];
+    
+    // Alarms
+    XIAlarms *alarmsProvider = [[XIAlarms alloc] init];
+    [dict setObject:alarmsProvider forKey:[XIAlarms topic]];
+    
+    // Statusbar
+    XIStatusBar *statusbarProvider = [[XIStatusBar alloc] init];
+    [dict setObject:statusbarProvider forKey:[XIStatusBar topic]];
+    
     
     return dict;
 }
@@ -189,6 +210,18 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
         // Notify of new change to variables
         NSString* function = [NSString stringWithFormat:@"mainUpdate('%@')", topic];
         [widget evaluateJavaScript:function completionHandler:^(id object, NSError *error) {}];
+    }
+}
+
+- (void)noteDeviceDidEnterSleep {
+    for (id<XIWidgetDataProvider> provider in self.widgetDataProviders.allValues) {
+        [provider noteDeviceDidEnterSleep];
+    }
+}
+
+- (void)noteDeviceDidExitSleep {
+    for (id<XIWidgetDataProvider> provider in self.widgetDataProviders.allValues) {
+        [provider noteDeviceDidExitSleep];
     }
 }
 
