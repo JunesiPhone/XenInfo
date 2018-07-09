@@ -92,6 +92,8 @@
 @interface SBMediaController : NSObject
 @property(readonly, nonatomic) __weak SBApplication *nowPlayingApplication;
 + (id)sharedInstance;
+- (BOOL)togglePlayPauseForEventSource:(long long)arg1;
+- (BOOL)changeTrack:(int)arg1 eventSource:(long long)arg2;
 - (BOOL)stop;
 - (BOOL)togglePlayPause;
 - (BOOL)pause;
