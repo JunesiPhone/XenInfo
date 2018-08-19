@@ -51,6 +51,10 @@ static bool firstLoad = false;
 static int lastWeatherUpdate = 1;
 //static NSMutableArray* signedInfo = [[NSMutableArray alloc] init];
 
+static NSString* escape(NSString* original) {
+    return [original stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+}
+
 static void update(NSString* values, NSString* type){
 	for (WKWebView* webview in _webviews) {
 		if([[NSString stringWithFormat:@"%@", webview.URL] isEqualToString:@"about:blank"]){
@@ -775,7 +779,7 @@ static void getMusic(){
 	        [UIImagePNGRepresentation(uiimage) writeToFile:@"var/mobile/Documents/Artwork.jpg" atomically:YES];
 	    }
 
-    	NSString* music = [NSString stringWithFormat:@"var artist = '%@', album = '%@', title = '%@', isplaying = %d;", artist, album, title, isplaying];
+    	NSString* music = [NSString stringWithFormat:@"var artist = '%@', album = '%@', title = '%@', isplaying = %d;", escape(artist), escape(album), escape(title), isplaying];
     	update(music, @"music");
 
     	info = nil;
