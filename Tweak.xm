@@ -752,41 +752,44 @@ static void getBattery(){
 // }
 
 static void getMusic(){
-    NSDictionary *info = [objc_getClass("MPUNowPlayingController") _xeninfo_currentNowPlayingInfo];
-    NSString *artist = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoArtist"]];
-    NSString *album = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoAlbum"]];
-    NSString *title = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoTitle"]];
+	dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.3);
+	dispatch_after(delay, dispatch_get_main_queue(), ^(void){
+		NSDictionary *info = [objc_getClass("MPUNowPlayingController") _xeninfo_currentNowPlayingInfo];
+        NSString *artist = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoArtist"]];
+        NSString *album = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoAlbum"]];
+        NSString *title = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoTitle"]];
 
-    if ([album containsString:@"Listening on"]) {
-        NSArray* arArray = [title componentsSeparatedByString:@"•"];
-        if([arArray count] > 1){
-                artist = arArray[1];
-                title = arArray[0];
+        if ([album containsString:@"Listening on"]) {
+            NSArray* arArray = [title componentsSeparatedByString:@"•"];
+            if([arArray count] > 1){
+                 artist = arArray[1];
+                 title = arArray[0];
+            }
         }
-    }
 
-    //title = removeQuote(title);
-    //album = removeQuote(album);
-    //artist = removeQuote(artist);
+        //title = removeQuote(title);
+        //album = removeQuote(album);
+        //artist = removeQuote(artist);
 
-    int isplaying = [[objc_getClass("SBMediaController") sharedInstance] isPlaying];
-    UIImage *uiimage = nil;
+        int isplaying = [[objc_getClass("SBMediaController") sharedInstance] isPlaying];
+	    UIImage *uiimage = nil;
 
-    if([objc_getClass("MPUNowPlayingController") _xeninfo_albumArt]){
-        uiimage = [objc_getClass("MPUNowPlayingController") _xeninfo_albumArt];
-        [UIImagePNGRepresentation(uiimage) writeToFile:@"var/mobile/Documents/Artwork.jpg" atomically:YES];
-    }
+	    if([objc_getClass("MPUNowPlayingController") _xeninfo_albumArt]){
+	        uiimage = [objc_getClass("MPUNowPlayingController") _xeninfo_albumArt];
+	        [UIImagePNGRepresentation(uiimage) writeToFile:@"var/mobile/Documents/Artwork.jpg" atomically:YES];
+	    }
 
-    NSString* music = [NSString stringWithFormat:@"var artist = '%@', album = '%@', title = '%@', isplaying = %d;", escape(artist), escape(album), escape(title), isplaying];
-    update(music, @"music");
+    	NSString* music = [NSString stringWithFormat:@"var artist = '%@', album = '%@', title = '%@', isplaying = %d;", escape(artist), escape(album), escape(title), isplaying];
+    	update(music, @"music");
 
-    info = nil;
-    artist = nil;
-    album = nil;
-    title = nil;
-    isplaying = nil;
-    uiimage = nil;
-    music = nil;
+    	info = nil;
+    	artist = nil;
+    	album = nil;
+    	title = nil;
+    	isplaying = nil;
+    	uiimage = nil;
+    	music = nil;
+	});
 }
 
 %hook MPUNowPlayingController
@@ -839,16 +842,16 @@ static void getMusic(){
 
 %hook SBMediaController
 - (void)_nowPlayingInfoChanged{
+    %orig;
 	if(loaded && deviceON && hasWebview){
         getMusic();
     }
-	return %orig;
 }
 - (void)_mediaRemoteNowPlayingInfoDidChange:(id)arg1{
+	%orig;
     if(loaded && deviceON && hasWebview){
         getMusic();
     }
-	%orig;
 }
 %end
 
