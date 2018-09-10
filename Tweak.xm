@@ -349,7 +349,7 @@ static void refreshWeather(){
 static void getWeather(){
 	if(lastWeatherUpdate > 0){
 		lastWeatherUpdate = 0;
-		dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 600.0);
+		dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 1200.0);
 		dispatch_after(delay, dispatch_get_main_queue(), ^(void){
 			lastWeatherUpdate = 1;
 		});
@@ -754,6 +754,10 @@ static void getMusic(){
         NSString *artist = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoArtist"]];
         NSString *album = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoAlbum"]];
         NSString *title = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoTitle"]];
+
+        artist = [artist stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+        album = [album stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+        title = [title stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
 
         if ([album containsString:@"Listening on"]) {
             NSArray* arArray = [title componentsSeparatedByString:@"•"];
