@@ -51,6 +51,10 @@ static bool firstLoad = false;
 static int lastWeatherUpdate = 1;
 //static NSMutableArray* signedInfo = [[NSMutableArray alloc] init];
 
+static NSString* escape(NSString* original) {
+    return [original stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+}
+
 static void update(NSString* values, NSString* type){
 	for (WKWebView* webview in _webviews) {
 		if([[NSString stringWithFormat:@"%@", webview.URL] isEqualToString:@"about:blank"]){
@@ -748,7 +752,7 @@ static void getBattery(){
 // }
 
 static void getMusic(){
-	dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 1.0);
+	dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.3);
 	dispatch_after(delay, dispatch_get_main_queue(), ^(void){
 		NSDictionary *info = [objc_getClass("MPUNowPlayingController") _xeninfo_currentNowPlayingInfo];
         NSString *artist = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoArtist"]];
@@ -779,7 +783,7 @@ static void getMusic(){
 	        [UIImagePNGRepresentation(uiimage) writeToFile:@"var/mobile/Documents/Artwork.jpg" atomically:YES];
 	    }
 
-    	NSString* music = [NSString stringWithFormat:@"var artist = '%@', album = '%@', title = '%@', isplaying = %d;", artist, album, title, isplaying];
+    	NSString* music = [NSString stringWithFormat:@"var artist = '%@', album = '%@', title = '%@', isplaying = %d;", escape(artist), escape(album), escape(title), isplaying];
     	update(music, @"music");
 
     	info = nil;
@@ -842,16 +846,16 @@ static void getMusic(){
 
 %hook SBMediaController
 - (void)_nowPlayingInfoChanged{
+    %orig;
 	if(loaded && deviceON && hasWebview){
         getMusic();
     }
-	return %orig;
 }
 - (void)_mediaRemoteNowPlayingInfoDidChange:(id)arg1{
+	%orig;
     if(loaded && deviceON && hasWebview){
         getMusic();
     }
-	%orig;
 }
 %end
 
