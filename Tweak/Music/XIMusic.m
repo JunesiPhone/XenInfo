@@ -91,15 +91,27 @@
 #pragma mark Actions callable by widgets
 
 - (void)togglePlayState {
-    [[objc_getClass("SBMediaController") sharedInstance] togglePlayPause];
+    SBMediaController *mediaController = [objc_getClass("SBMediaController") sharedInstance];
+    if ([mediaController respondsToSelector:@selector(togglePlayPause)])
+        [mediaController togglePlayPause];
+    else if ([mediaController respondsToSelector:@selector(togglePlayPauseForEventSource:)])
+        [mediaController togglePlayPauseForEventSource:1];
 }
 
 - (void)advanceTrack {
-    [[objc_getClass("SBMediaController") sharedInstance] changeTrack:1];
+    SBMediaController *mediaController = [objc_getClass("SBMediaController") sharedInstance];
+    if ([mediaController respondsToSelector:@selector(changeTrack)])
+        [mediaController changeTrack:1];
+    else if ([mediaController respondsToSelector:@selector(changeTrack:eventSource:)])
+        [mediaController changeTrack:1 eventSource:1];
 }
 
 - (void)retreatTrack {
-    [[objc_getClass("SBMediaController") sharedInstance] changeTrack:-1];
+    SBMediaController *mediaController = [objc_getClass("SBMediaController") sharedInstance];
+    if ([mediaController respondsToSelector:@selector(changeTrack)])
+        [mediaController changeTrack:-1];
+    else if ([mediaController respondsToSelector:@selector(changeTrack:eventSource:)])
+        [mediaController changeTrack:-1 eventSource:1];
 }
 
 #pragma mark Provider specific methods
