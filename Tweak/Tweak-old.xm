@@ -350,7 +350,7 @@ static void refreshWeather(){
 static void getWeather(){
 	if(lastWeatherUpdate > 0){
 		lastWeatherUpdate = 0;
-		dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 600.0);
+		dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 1200.0);
 		dispatch_after(delay, dispatch_get_main_queue(), ^(void){
 			lastWeatherUpdate = 1;
 		});
@@ -757,6 +757,10 @@ static void getMusic(){
         NSString *album = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoAlbum"]];
         NSString *title = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoTitle"]];
 
+        artist = [artist stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+        album = [album stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+        title = [title stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+
         if ([album containsString:@"Listening on"]) {
             NSArray* arArray = [title componentsSeparatedByString:@"•"];
             if([arArray count] > 1){
@@ -962,17 +966,32 @@ static void loadAllInfo(){
     //play and pause window.location = 'xeninfo:playpause';
     %new
     -(void)playpause{
-        [[objc_getClass("SBMediaController") sharedInstance] togglePlayPause];
+        SBMediaController* MC = [objc_getClass("SBMediaController") sharedInstance];
+        if ([MC respondsToSelector:@selector(togglePlayPause)]) {
+            [MC togglePlayPause];
+        }else if ([MC respondsToSelector:@selector(togglePlayPauseForEventSource:)]){
+            [MC togglePlayPauseForEventSource:1];
+        }
     }
     //next track window.location = 'xeninfo:nextrack';
     %new
     -(void)nexttrack{
-         [[objc_getClass("SBMediaController") sharedInstance] changeTrack:1];
+        SBMediaController* MC = [objc_getClass("SBMediaController") sharedInstance];
+        if ([MC respondsToSelector:@selector(changeTrack:)]) {
+            [MC changeTrack:1];
+        }else if ([MC respondsToSelector:@selector(changeTrack:eventSource:)]){
+            [MC changeTrack:1 eventSource:1];
+        }
     }
     //previous track window.location = 'xeninfo:prevtrack';
     %new
     -(void)prevtrack{
-        [[objc_getClass("SBMediaController") sharedInstance] changeTrack:-1];
+        SBMediaController* MC = [objc_getClass("SBMediaController") sharedInstance];
+        if ([MC respondsToSelector:@selector(changeTrack:)]) {
+            [MC changeTrack:-1];
+        }else if ([MC respondsToSelector:@selector(changeTrack:eventSource:)]){
+            [MC changeTrack:-1 eventSource:1];
+        }
     }
 
     //open app from XenHTML widget window.location = 'xeninfo:openapp:com.spotify.client';
@@ -1081,20 +1100,37 @@ static void loadAllInfo(){
 //new XENHTML
 %hook XENHWidgetController
 
-    //play and pause window.location = 'xeninfo:playpause';
     %new
     -(void)playpause{
-        [[objc_getClass("SBMediaController") sharedInstance] togglePlayPause];
+        SBMediaController* MC = [objc_getClass("SBMediaController") sharedInstance];
+        if ([MC respondsToSelector:@selector(togglePlayPause)]) {
+            [MC togglePlayPause];
+        }else if ([MC respondsToSelector:@selector(togglePlayPauseForEventSource:)]){
+            [MC togglePlayPauseForEventSource:1];
+        }
+        //[[objc_getClass("SBMediaController") sharedInstance] togglePlayPause];
     }
     //next track window.location = 'xeninfo:nextrack';
     %new
     -(void)nexttrack{
-         [[objc_getClass("SBMediaController") sharedInstance] changeTrack:1];
+        SBMediaController* MC = [objc_getClass("SBMediaController") sharedInstance];
+        if ([MC respondsToSelector:@selector(changeTrack:)]) {
+            [MC changeTrack:1];
+        }else if ([MC respondsToSelector:@selector(changeTrack:eventSource:)]){
+            [MC changeTrack:1 eventSource:1];
+        }
+         //[[objc_getClass("SBMediaController") sharedInstance] changeTrack:1];
     }
     //previous track window.location = 'xeninfo:prevtrack';
     %new
     -(void)prevtrack{
-        [[objc_getClass("SBMediaController") sharedInstance] changeTrack:-1];
+        SBMediaController* MC = [objc_getClass("SBMediaController") sharedInstance];
+        if ([MC respondsToSelector:@selector(changeTrack:)]) {
+            [MC changeTrack:-1];
+        }else if ([MC respondsToSelector:@selector(changeTrack:eventSource:)]){
+            [MC changeTrack:-1 eventSource:1];
+        }
+        //[[objc_getClass("SBMediaController") sharedInstance] changeTrack:-1];
     }
 
     //open app from XenHTML widget window.location = 'xeninfo:openapp:com.spotify.client';
