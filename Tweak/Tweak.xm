@@ -343,6 +343,28 @@ static MPUNowPlayingController *globalMPUNowPlaying;
 %end
 
 ///////////////////////////////////////////////////////////////
+#pragma mark Statusbar state
+///////////////////////////////////////////////////////////////
+
+#import "Statusbar/XIStatusBar.h"
+
+%hook SBStatusBarStateAggregator
+
+- (void)_notifyItemChanged:(int)arg1{
+    %orig;
+    
+    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIStatusBar topic]];
+}
+
+-(void)_updateDataNetworkItem{
+    %orig;
+    
+    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIStatusBar topic]];
+}
+
+%end
+
+///////////////////////////////////////////////////////////////
 #pragma mark Display state
 ///////////////////////////////////////////////////////////////
 

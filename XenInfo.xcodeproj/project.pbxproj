@@ -35,6 +35,7 @@
 		C9E16FDB20C09ECA00BA0031 /* XIAlarms.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XIAlarms.m; sourceTree = "<group>"; };
 		C9E16FDC20C09EDA00BA0031 /* XIStatusBar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIStatusBar.h; sourceTree = "<group>"; };
 		C9E16FDD20C09EDA00BA0031 /* XIStatusBar.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XIStatusBar.m; sourceTree = "<group>"; };
+		C9FDC9EE2185F68C001448D2 /* XIStatusBarHeaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIStatusBarHeaders.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -129,6 +130,7 @@
 			children = (
 				C9E16FDC20C09EDA00BA0031 /* XIStatusBar.h */,
 				C9E16FDD20C09EDA00BA0031 /* XIStatusBar.m */,
+				C9FDC9EE2185F68C001448D2 /* XIStatusBarHeaders.h */,
 			);
 			path = Statusbar;
 			sourceTree = "<group>";

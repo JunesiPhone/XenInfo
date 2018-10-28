@@ -7,6 +7,18 @@
 //
 
 #import "XIStatusBar.h"
+#import "XIStatusBarHeaders.h"
+#import <objc/runtime.h>
+
+@interface XIStatusBar ()
+@property (nonatomic, strong) NSNumber *signalStrengthRSSI;
+@property (nonatomic, strong) NSNumber *signalStrengthBars;
+@property (nonatomic, strong) NSString *operatorName;
+@property (nonatomic, strong) NSNumber *wifiStrengthRSSI;
+@property (nonatomic, strong) NSNumber *wifiStrengthBars;
+@property (nonatomic, strong) NSString *wifiNetworkName;
+@property (nonatomic, readwrite) BOOL bluetoothConnected;
+@end
 
 @implementation XIStatusBar
 
@@ -18,12 +30,12 @@
 
 // Called when the device enters sleep mode
 - (void)noteDeviceDidEnterSleep {
-    
+    // Not needed
 }
 
 // Called on the reverse
 - (void)noteDeviceDidExitSleep {
-    
+    // Not needed
 }
 
 // Register a delegate object to call upon when new data becomes available.
@@ -34,11 +46,53 @@
 
 // Called when a new widget is added, and it needs to be provided new data on load.
 - (NSString*)requestCachedData {
-    return @"";
+    return [self _variablesToJSString];
 }
 
 - (void)requestRefresh {
-    // Called for new information being available.
+    [self _updateData];
+    
+    // And then send the data through to the widgets
+    [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIStatusBar topic]];
+}
+
+- (void)_updateData {
+    // Handle telephony first.
+    SBTelephonyManager *telephonyManager = [objc_getClass("SBTelephonyManager") sharedTelephonyManager];
+    
+    if ([telephonyManager respondsToSelector:@selector(signalStrength)])
+        self.signalStrengthRSSI = [NSNumber numberWithInt:[telephonyManager signalStrength]];
+    else
+        self.signalStrengthRSSI = [NSNumber numberWithInt:0];
+    self.signalStrengthBars = [NSNumber numberWithInt:[telephonyManager signalStrengthBars]];
+    self.operatorName = [self _escapeString:[telephonyManager operatorName]];
+    if (!self.operatorName || [self.operatorName isEqualToString:@"(null)"] || [self.operatorName isEqualToString:@""])
+        self.operatorName = @"NA";
+    
+    // Wifi
+    SBWiFiManager *wifiManager = [objc_getClass("SBWiFiManager") sharedInstance];
+    
+    self.wifiStrengthRSSI = [NSNumber numberWithInt:[wifiManager signalStrengthRSSI]];
+    self.wifiStrengthBars = [NSNumber numberWithInt:[wifiManager signalStrengthBars]];
+    self.wifiNetworkName = [self _escapeString:[wifiManager currentNetworkName]];
+    if (!self.wifiNetworkName || [self.wifiNetworkName isEqualToString:@"(null)"] || [self.wifiNetworkName isEqualToString:@""])
+        self.wifiNetworkName = @"NA";
+    
+    // Bluetooth
+    BluetoothManager *bluetoothManager = [objc_getClass("BluetoothManager") sharedInstance];
+    self.bluetoothConnected = [bluetoothManager enabled];
+}
+
+- (NSString*)_variablesToJSString {
+    return [NSString stringWithFormat:@"var signalStrength = '%@', signalBars = '%@', signalName = '%@', wifiStrength = '%@', wifiBars = '%@', wifiName = '%@', bluetoothOn = '%@';", self.signalStrengthRSSI, self.signalStrengthBars,
+            self.operatorName, self.wifiStrengthRSSI, self.wifiStrengthBars, self.wifiNetworkName, [NSNumber numberWithBool:self.bluetoothConnected]];
+}
+
+- (NSString*)_escapeString:(NSString*)input {
+    input = [input stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+    input = [input stringByReplacingOccurrencesOfString: @"\"" withString:@"\\\""];
+    
+    return input;
 }
 
 @end
