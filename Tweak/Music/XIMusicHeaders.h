@@ -32,6 +32,8 @@
 + (id)sharedInstance;
 - (BOOL)stop;
 - (BOOL)togglePlayPause;
+- (BOOL)togglePlayPauseForEventSource:(long long)arg1;
+- (BOOL)changeTrack:(int)arg1 eventSource:(long long)arg2;
 - (BOOL)pause;
 - (BOOL)play;
 - (BOOL)isPaused;
