@@ -46,6 +46,11 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
           lineNumber, [body UTF8String]);
 }
 
+@interface XIWidgetManager ()
+@property (nonatomic, strong) NSMutableArray *queuedUpdatesWhileDeviceSleeping;
+@property (nonatomic, readwrite) BOOL deviceSleepState;
+@end
+
 /*
  * This class handles management of widgets added by the user by any tweak, including Xen HTML
  * and AnemoneHTML.
@@ -74,6 +79,9 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
         // Setup arrays.
         self.registeredWidgets = [NSMutableArray array];
         self.widgetDataProviders = [self _populateWidgetDataProviders];
+        
+        self.queuedUpdatesWhileDeviceSleeping = [NSMutableArray array];
+        self.deviceSleepState = NO;
         
         for (id<XIWidgetDataProvider> provider in self.widgetDataProviders.allValues) {
             [provider registerDelegate:self];
@@ -126,18 +134,21 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
     return dict;
 }
 
-- (void)registerWidget:(WKWebView*)widget {
+- (void)registerWidget:(id)widget {
+    // TODO: Check this widget implements mainUpdate().
+    
     [self.registeredWidgets addObject:widget];
     
     // Give this widget all the currently known data!
     [self _updateWidgetWithCachedInformation:widget];
 }
 
-- (void)unregisterWidget:(WKWebView*)widget {
-    [self.registeredWidgets removeObject:widget];
+- (void)unregisterWidget:(id)widget {
+    if ([self.registeredWidgets containsObject:widget])
+        [self.registeredWidgets removeObject:widget];
 }
 
-- (void)widget:(WKWebView*)widget didRequestAction:(NSString*)action withParameter:(NSString*)parameter {
+- (void)widget:(id)widget didRequestAction:(NSString*)action withParameter:(NSString*)parameter {
     
     /*****************************************************/
     /*           ADD NEW WIDGET COMMANDS HERE            */
@@ -179,16 +190,32 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
 }
 
 - (void)updateWidgetsWithNewData:(NSString*)javascriptString onTopic:(NSString*)topic {
-    Xlog(@"Updating with '%@' on '%@'", javascriptString, topic);
-    
-    // Loop over widget array, and call update as required.
-    for (WKWebView *widget in self.registeredWidgets) {
-        // Update JS variables
-        [widget evaluateJavaScript:javascriptString completionHandler:^(id object, NSError *error) {}];
+    if (YES == self.deviceSleepState) {
+        // Save this update for when the device wakes, to avoid any weirdness like screen freezes!
+        NSDictionary *update = @{@"topic": topic, @"javascriptString": javascriptString };
         
-        // Notify of new change to variables
-        NSString* function = [NSString stringWithFormat:@"mainUpdate('%@')", topic];
-        [widget evaluateJavaScript:function completionHandler:^(id object, NSError *error) {}];
+        [self.queuedUpdatesWhileDeviceSleeping addObject:update];
+    } else {
+        Xlog(@"Updating with '%@' on '%@'", javascriptString, topic);
+        
+        // Loop over widget array, and call update as required.
+        for (id widget in self.registeredWidgets) {
+            if ([[widget class] isEqual:[UIWebView class]]) {
+                // Update JS variables
+                [widget stringByEvaluatingJavaScriptFromString:javascriptString];
+                
+                // Notify of new change to variables
+                NSString* function = [NSString stringWithFormat:@"mainUpdate('%@')", topic];
+                [widget stringByEvaluatingJavaScriptFromString:function];
+            } else if ([[widget class] isEqual:[WKWebView class]]) {
+                // Update JS variables
+                [widget evaluateJavaScript:javascriptString completionHandler:^(id object, NSError *error) {}];
+                
+                // Notify of new change to variables
+                NSString* function = [NSString stringWithFormat:@"mainUpdate('%@')", topic];
+                [widget evaluateJavaScript:function completionHandler:^(id object, NSError *error) {}];
+            }
+        }
     }
 }
 
@@ -197,31 +224,59 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
     [provider requestRefresh];
 }
 
-- (void)_updateWidgetWithCachedInformation:(WKWebView*)widget {
+- (void)_updateWidgetWithCachedInformation:(id)widget {
     // Give this widget the current known data!
     for (NSString *topic in self.widgetDataProviders.allKeys) {
         id<XIWidgetDataProvider> provider = [self.widgetDataProviders objectForKey:topic];
         
         NSString *cachedData = [provider requestCachedData];
         
-        // Update JS variables
-        [widget evaluateJavaScript:cachedData completionHandler:^(id object, NSError *error) {}];
-        
-        // Notify of new change to variables
-        NSString* function = [NSString stringWithFormat:@"mainUpdate('%@')", topic];
-        [widget evaluateJavaScript:function completionHandler:^(id object, NSError *error) {}];
+        if ([[widget class] isEqual:[UIWebView class]]) {
+            // Update JS variables
+            [widget stringByEvaluatingJavaScriptFromString:cachedData];
+            
+            // Notify of new change to variables
+            NSString* function = [NSString stringWithFormat:@"mainUpdate('%@')", topic];
+            [widget stringByEvaluatingJavaScriptFromString:function];
+        } else if ([[widget class] isEqual:[WKWebView class]]) {
+            // Update JS variables
+            [widget evaluateJavaScript:cachedData completionHandler:^(id object, NSError *error) {}];
+            
+            // Notify of new change to variables
+            NSString* function = [NSString stringWithFormat:@"mainUpdate('%@')", topic];
+            [widget evaluateJavaScript:function completionHandler:^(id object, NSError *error) {}];
+        }
     }
 }
 
 - (void)noteDeviceDidEnterSleep {
+    self.deviceSleepState = YES;
+    
     for (id<XIWidgetDataProvider> provider in self.widgetDataProviders.allValues) {
         [provider noteDeviceDidEnterSleep];
     }
+    
+    Xlog(@"Device did enter sleep");
 }
 
 - (void)noteDeviceDidExitSleep {
+    Xlog(@"Device did exit sleep");
+    
+    self.deviceSleepState = NO;
+    
     for (id<XIWidgetDataProvider> provider in self.widgetDataProviders.allValues) {
         [provider noteDeviceDidExitSleep];
+    }
+    
+    // Run any queued data updates
+    Xlog(@"Running queued updates. Count: %d", [self.queuedUpdatesWhileDeviceSleeping count]);
+    for (NSDictionary *update in [self.queuedUpdatesWhileDeviceSleeping copy]) {
+        NSString *topic = update[@"topic"];
+        NSString *javascriptString = update[@"javascriptString"];
+        
+        [self updateWidgetsWithNewData:javascriptString onTopic:topic];
+        
+        [self.queuedUpdatesWhileDeviceSleeping removeObject:update];
     }
 }
 

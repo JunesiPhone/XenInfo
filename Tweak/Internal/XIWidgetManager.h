@@ -30,12 +30,12 @@ extern "C" {
 + (instancetype)sharedInstance;
 
 // Called when a WKWebView navigates to a page other than about:blank
-- (void)registerWidget:(WKWebView*)widget;
+- (void)registerWidget:(id)widget;
 // Called when navigated to about:blank
-- (void)unregisterWidget:(WKWebView*)widget;
+- (void)unregisterWidget:(id)widget;
 
 // Called when a widget attempts navigation to a location prefixed by "xeninfo:"
-- (void)widget:(WKWebView*)widget didRequestAction:(NSString*)action withParameter:(NSString*)parameter;
+- (void)widget:(id)widget didRequestAction:(NSString*)action withParameter:(NSString*)parameter;
 
 // Called to request an update for a data provider from a hooked method.
 - (void)requestRefreshForDataProviderTopic:(NSString*)topic;

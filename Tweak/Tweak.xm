@@ -7,8 +7,19 @@
 #import <WebKit/WebKit.h>
 #import <objc/runtime.h>
 
+@class WebView;
+@class WebScriptObject;
+
+@interface WebFrame : NSObject
+- (id)dataSource;
+@end
+
 @interface WKWebView (Additions)
 @property (nonatomic, assign) id<WKNavigationDelegate> hijackedNavigationDelegate;
+@end
+
+@interface UIWebView (Additions)
+@property (nonatomic, assign) id<UIWebViewDelegate> hijackedDelegate;
 @end
 
 ///////////////////////////////////////////////////////////////
@@ -17,6 +28,7 @@
 
 #pragma mark Add any webviews to our widget manager as required.
 
+// WKWebView handling
 %hook WKWebView
 
 - (void)_didFinishLoadForMainFrame {
@@ -27,20 +39,61 @@
     NSString *url = [self.URL absoluteString];
     
     if (![url isEqualToString:@""] && ![url isEqualToString:@"about:blank"]) {
-        Xlog(@"Registering widget for URL: %@", url);
+        Xlog(@"Registering widget (WKWebView) for URL: %@", url);
         [[XIWidgetManager sharedInstance] registerWidget:self];
     }
 }
 
--(id)loadHTMLString:(NSString*)arg1 baseURL:(id)arg2 {
-    NSString *url = [self.URL absoluteString];
+- (void)removeFromSuperview {
+    // Not a great hook, but should work!
+    NSString *href = [self. URL absoluteString];
     
-    if ([arg1 isEqualToString:@""] && ![url isEqualToString:@"about:blank"]) {
-        Xlog(@"Unregistering widget for URL: %@", url);
-        [[XIWidgetManager sharedInstance] unregisterWidget:self];
+    Xlog(@"Unregistering widget (WKWebView) for URL: %@", href);
+    [[XIWidgetManager sharedInstance] unregisterWidget:self];
+    
+    %orig;
+}
+
+%end
+
+%hook WKContentView
+
+- (void)_webViewDestroyed {
+    // Catch destroyed event from WKContentView
+    WKWebView *webView = MSHookIvar<WKWebView*>(self, "_webView");
+    if (webView) {
+        NSString *url = [webView.URL absoluteString];
+        Xlog(@"Unregistering widget (WKWebView) for URL: %@", url);
+        [[XIWidgetManager sharedInstance] unregisterWidget:webView];
     }
     
-    return %orig;
+    %orig;
+}
+
+%end
+
+// UIWebView handling
+%hook UIWebView
+
+- (void)webView:(WebView *)webview didClearWindowObject:(WebScriptObject *)window forFrame:(WebFrame *)frame {
+    %orig;
+    
+    NSString *href = [[[[frame dataSource] request] URL] absoluteString];
+    
+    if (href && ![href isEqualToString:@""] && ![href isEqualToString:@"about:blank"]) {
+        Xlog(@"Registering widget (UIWebView) for href: %@", href);
+        [[XIWidgetManager sharedInstance] registerWidget:self];
+    }
+}
+
+- (void)removeFromSuperview {
+    // Not a great hook, but should work!
+    NSString *href = [[self.request URL] absoluteString];
+    
+    Xlog(@"Unregistering widget (UIWebView) for href: %@", href);
+    [[XIWidgetManager sharedInstance] unregisterWidget:self];
+    
+    %orig;
 }
 
 %end
@@ -68,7 +121,9 @@
 
 // Override the navigationDelegate if updated
 - (void)setNavigationDelegate:(id)delegate {
-    self.hijackedNavigationDelegate = delegate;
+    if (![delegate isEqual:self])
+        self.hijackedNavigationDelegate = delegate;
+        
     %orig((id<WKNavigationDelegate>)self);
 }
 
@@ -145,6 +200,74 @@
 
 %end
 
+%hook UIWebView
+
+%property (nonatomic, assign) id hijackedDelegate;
+
+- (id)initWithFrame:(CGRect)arg1 {
+    UIWebView *orig = %orig;
+    
+    if (orig) {
+        // Set the delegate initially.
+        orig.delegate = (id<UIWebViewDelegate>)orig;
+    }
+    
+    return orig;
+}
+
+- (void)setDelegate:(id<UIWebViewDelegate>)delegate {
+    // Update the hijacked delegate
+    if (![delegate isEqual:self])
+        self.hijackedDelegate = delegate;
+        
+    %orig((id<UIWebViewDelegate>)self);
+}
+
+%new
+- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
+    
+    NSString *url = [[request URL] absoluteString];
+    
+    if ([url hasPrefix:@"xeninfo:"]) {
+        NSArray *components = [url componentsSeparatedByString:@":"];
+        
+        NSString *function = [components objectAtIndex:1];
+        
+        // Pass through the function and parameters through to the widget manager.
+        NSString *parameter = components.count > 2 ? [components objectAtIndex:2] : @"";
+        
+        Xlog(@"Recieved a command: '%@' with parameter '%@'", function, parameter);
+        
+        // Send to widget manager.
+        [[XIWidgetManager sharedInstance] widget:self didRequestAction:function withParameter:parameter];
+        
+        // Make sure to cancel this navigation!
+        return NO;
+    } else {
+        return YES;
+    }
+}
+
+%new
+- (void)webViewDidStartLoad:(UIWebView *)webView {
+    if (self.hijackedDelegate)
+        [self.hijackedDelegate webViewDidStartLoad:webView];
+}
+
+%new
+- (void)webViewDidFinishLoad:(UIWebView *)webView {
+    if (self.hijackedDelegate)
+        [self.hijackedDelegate webViewDidFinishLoad:webView];
+}
+
+%new
+- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
+    if (self.hijackedDelegate)
+        [self.hijackedDelegate webView:webView didFailLoadWithError:error];
+}
+
+%end
+
 ///////////////////////////////////////////////////////////////
 #pragma mark Battery Information Hooks
 ///////////////////////////////////////////////////////////////
@@ -215,6 +338,71 @@ static MPUNowPlayingController *globalMPUNowPlaying;
     }
     
     return [globalMPUNowPlaying currentNowPlayingArtwork];
+}
+
+%end
+
+///////////////////////////////////////////////////////////////
+#pragma mark Display state
+///////////////////////////////////////////////////////////////
+
+// iOS 9
+%hook SBLockScreenViewController
+
+-(void)_handleDisplayTurnedOff {
+    %orig;
+    
+    [[XIWidgetManager sharedInstance] noteDeviceDidEnterSleep];
+}
+
+// When in a phone call, this code is not run.
+- (void)_handleDisplayTurnedOnWhileUILocked:(id)locked {
+    [[XIWidgetManager sharedInstance] noteDeviceDidExitSleep];
+    
+    %orig;
+}
+
+%end
+
+// iOS 10
+%hook SBLockScreenManager
+
+- (void)_handleBacklightLevelChanged:(NSNotification*)arg1 {
+    %orig;
+    
+    if ([UIDevice currentDevice].systemVersion.floatValue >= 10.0) {
+        NSDictionary *userInfo = arg1.userInfo;
+        
+        CGFloat newBacklight = [[userInfo objectForKey:@"SBBacklightNewFactorKey"] floatValue];
+        CGFloat oldBacklight = [[userInfo objectForKey:@"SBBacklightOldFactorKey"] floatValue];
+        
+        if (newBacklight == 0.0) {
+            [[XIWidgetManager sharedInstance] noteDeviceDidEnterSleep];
+        } else if (oldBacklight == 0.0 && newBacklight > 0.0) {
+            [[XIWidgetManager sharedInstance] noteDeviceDidExitSleep];
+        }
+    }
+}
+
+%end
+
+// iOS 11
+%hook SBScreenWakeAnimationController
+
+- (void)_handleAnimationCompletionIfNecessaryForWaking:(_Bool)wokeLS {
+    if (!wokeLS) {
+        [[XIWidgetManager sharedInstance] noteDeviceDidEnterSleep];
+    }
+    
+    %orig;
+}
+
+- (void)_startWakeAnimationsForWaking:(_Bool)arg1 animationSettings:(id)arg2 {
+    if (arg1) {
+        [[XIWidgetManager sharedInstance] noteDeviceDidExitSleep];
+    }
+    
+    %orig;
 }
 
 %end
