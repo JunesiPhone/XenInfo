@@ -7,9 +7,11 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <CoreLocation/CoreLocation.h>
+
 #import "../Internal/XIWidgetDataProvider-Protocol.h"
 
-@interface XIWeather : NSObject <XIWidgetDataProvider>
+@interface XIWeather : NSObject <XIWidgetDataProvider, CLLocationManagerDelegate>
 
 // Delegate is stored to communicate data back to widgets
 @property (nonatomic, weak) id<XIWidgetManagerDelegate> delegate;

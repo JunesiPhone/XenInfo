@@ -8,7 +8,6 @@
 
 #import "XIMusic.h"
 #import "XIMusicHeaders.h"
-
 #import <objc/runtime.h>
 
 @implementation XIMusic

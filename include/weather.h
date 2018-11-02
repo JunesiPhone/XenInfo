@@ -110,6 +110,7 @@
 - (void)setLocalWeatherEnabled:(BOOL)arg1;
 - (BOOL)isCelsius;
 - (id)loadSavedCities;
+- (id)loadSavedCityAtIndex:(int)index;
 @end
 
 @interface WeatherHTTPRequest : NSObject <NSURLConnectionDataDelegate> {

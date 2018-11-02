@@ -36,6 +36,7 @@
 		C9E16FDC20C09EDA00BA0031 /* XIStatusBar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIStatusBar.h; sourceTree = "<group>"; };
 		C9E16FDD20C09EDA00BA0031 /* XIStatusBar.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XIStatusBar.m; sourceTree = "<group>"; };
 		C9FDC9EE2185F68C001448D2 /* XIStatusBarHeaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIStatusBarHeaders.h; sourceTree = "<group>"; };
+		C9FDC9EF21866387001448D2 /* XIWeatherHeaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIWeatherHeaders.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -82,6 +83,7 @@
 			children = (
 				C978F96220C05BA4005C20B8 /* XIWeather.h */,
 				C978F96320C05BA4005C20B8 /* XIWeather.m */,
+				C9FDC9EF21866387001448D2 /* XIWeatherHeaders.h */,
 			);
 			path = Weather;
 			sourceTree = "<group>";
