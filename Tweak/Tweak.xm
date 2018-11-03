@@ -14,87 +14,103 @@
 - (id)dataSource;
 @end
 
+@interface XENHWidgetController : NSObject
+// Internal webviews
+@property (nonatomic, strong) WKWebView *webView;
+@property (nonatomic, strong) UIWebView *legacyWebView;
+@end
+
 @interface WKWebView (Additions)
 @property (nonatomic, assign) id<WKNavigationDelegate> hijackedNavigationDelegate;
+@property (nonatomic, copy) NSNumber *_xenhtml;
 @end
 
 @interface UIWebView (Additions)
 @property (nonatomic, assign) id<UIWebViewDelegate> hijackedDelegate;
+@property (nonatomic, copy) NSNumber *_xenhtml;
 @end
 
 ///////////////////////////////////////////////////////////////
 #pragma mark Internal Hooks
 ///////////////////////////////////////////////////////////////
 
-#pragma mark Add any webviews to our widget manager as required.
+#pragma mark Add Xen HTML (only!) webviews to our widget manager as required.
 
-// WKWebView handling
-%hook WKWebView
+%hook XENHWidgetController
 
-- (void)_didFinishLoadForMainFrame {
-    %orig;
+// WKWebView
+ - (void)_unloadWebView {
+     WKWebView *widget = self.webView;
+     if (widget) {
+         NSString *url = [widget.URL absoluteString];
+         Xlog(@"Unregistering widget (WKWebView) for URL: %@", url);
+         
+        [[XIWidgetManager sharedInstance] unregisterWidget:widget];
+     }
+     
+     %orig;
+ }
+ 
+ - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
+     %orig;
+     
+     NSString *url = [webView.URL absoluteString];
+     
+     if (![url isEqualToString:@""] && ![url isEqualToString:@"about:blank"]) {
+         Xlog(@"Registering widget (WKWebView) for URL: %@", url);
+         
+         webView._xenhtml = @YES;
+         [[XIWidgetManager sharedInstance] registerWidget:webView];
+     }
+ }
 
-    // Loading has ended; add to manager if required.
+// UIWebView
+ - (void)_unloadLegacyWebView {
+     UIWebView *widget = self.legacyWebView;
+     if (widget) {
+         NSString *href = [[widget.request URL] absoluteString];
+         Xlog(@"Unregistering widget (UIWebView) for href: %@", href);
+         
+         [[XIWidgetManager sharedInstance] unregisterWidget:widget];
+     }
+     
+     %orig;
+ }
+ 
+ - (void)setLegacyWebView:(UIWebView *)arg1 {
+     %orig;
+ 
+     if (arg1) {
+         arg1._xenhtml = @YES;
+     }
+ }
+ 
+ %end
 
-    NSString *url = [self.URL absoluteString];
-    
-    if (![url isEqualToString:@""] && ![url isEqualToString:@"about:blank"]) {
-        Xlog(@"Registering widget (WKWebView) for URL: %@", url);
-        [[XIWidgetManager sharedInstance] registerWidget:self];
-    }
-}
-
-- (void)removeFromSuperview {
-    // Not a great hook, but should work!
-    NSString *href = [self. URL absoluteString];
-    
-    Xlog(@"Unregistering widget (WKWebView) for URL: %@", href);
-    [[XIWidgetManager sharedInstance] unregisterWidget:self];
-    
-    %orig;
-}
-
-%end
-
-%hook WKContentView
-
-- (void)_webViewDestroyed {
-    // Catch destroyed event from WKContentView
-    WKWebView *webView = MSHookIvar<WKWebView*>(self, "_webView");
-    if (webView) {
-        NSString *url = [webView.URL absoluteString];
-        Xlog(@"Unregistering widget (WKWebView) for URL: %@", url);
-        [[XIWidgetManager sharedInstance] unregisterWidget:webView];
-    }
-    
-    %orig;
-}
-
-%end
-
-// UIWebView handling
+// Not using UIWebView delegate, so use a workaround
 %hook UIWebView
 
-- (void)webView:(WebView *)webview didClearWindowObject:(WebScriptObject *)window forFrame:(WebFrame *)frame {
-    %orig;
+%property (nonatomic, copy) NSNumber *_xenhtml; // readwrite not supported by my version of theos.
+
+%new
+- (void)webViewDidFinishLoad:(UIWebView *)webView {
+    if (self.hijackedDelegate) {
+        [self.hijackedDelegate webViewDidFinishLoad:webView];
+    }
     
-    NSString *href = [[[[frame dataSource] request] URL] absoluteString];
+    NSString *href = [[self.request URL] absoluteString];
     
-    if (href && ![href isEqualToString:@""] && ![href isEqualToString:@"about:blank"]) {
+    if ([self._xenhtml isEqual:@YES] && href && ![href isEqualToString:@""] && ![href isEqualToString:@"about:blank"]) {
         Xlog(@"Registering widget (UIWebView) for href: %@", href);
         [[XIWidgetManager sharedInstance] registerWidget:self];
     }
 }
 
-- (void)removeFromSuperview {
-    // Not a great hook, but should work!
-    NSString *href = [[self.request URL] absoluteString];
-    
-    Xlog(@"Unregistering widget (UIWebView) for href: %@", href);
-    [[XIWidgetManager sharedInstance] unregisterWidget:self];
-    
-    %orig;
-}
+%end
+
+%hook WKWebView
+
+%property (nonatomic, copy) NSNumber *_xenhtml;
 
 %end
 
@@ -132,6 +148,17 @@
 
 %new
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+    
+    // Allow other tweaks etc to handle this one.
+    if ([self._xenhtml isEqual:@NO]) {
+        if (self.hijackedNavigationDelegate) {
+            [(id<WKNavigationDelegate>)self.hijackedNavigationDelegate webView:webView decidePolicyForNavigationAction:navigationAction decisionHandler:decisionHandler];
+        } else {
+            decisionHandler(WKNavigationActionPolicyAllow);
+        }
+        
+        return;
+    }
     
     NSURLRequest *request = navigationAction.request;
     NSString *url = [[request URL] absoluteString];
@@ -226,6 +253,15 @@
 %new
 - (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
     
+    // Allow other tweaks etc to handle this one.
+    if ([self._xenhtml isEqual:@NO]) {
+        if (self.hijackedDelegate) {
+            return [self.hijackedDelegate webView:webView shouldStartLoadWithRequest:request navigationType:navigationType];
+        } else {
+            return YES;
+        }
+    }
+    
     NSString *url = [[request URL] absoluteString];
     
     if ([url hasPrefix:@"xeninfo:"]) {
@@ -252,12 +288,6 @@
 - (void)webViewDidStartLoad:(UIWebView *)webView {
     if (self.hijackedDelegate)
         [self.hijackedDelegate webViewDidStartLoad:webView];
-}
-
-%new
-- (void)webViewDidFinishLoad:(UIWebView *)webView {
-    if (self.hijackedDelegate)
-        [self.hijackedDelegate webViewDidFinishLoad:webView];
 }
 
 %new
