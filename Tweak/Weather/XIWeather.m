@@ -223,7 +223,7 @@
         self.cachedFormatter = [NSDateFormatter new];
         self.updateTimer = [NSTimer scheduledTimerWithTimeInterval:UPDATE_INTERVAL * 60
                                                             target:self
-                                                          selector:@selector(requestUpdate)
+                                                          selector:@selector(requestRefresh)
                                                           userInfo:nil
                                                            repeats:YES];
         
@@ -233,12 +233,29 @@
         self.weatherLocationManager = [objc_getClass("WeatherLocationManager") sharedWeatherLocationManager];
         [self.weatherLocationManager setDelegate:self.locationManager];
         
+        self.locationManager.delegate = self;
+        
         self.currentCity = [self _currentCity];
         
         // Do an initial update
         dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5.0);
         dispatch_after(delay, dispatch_get_main_queue(), ^(void){
             [self requestRefresh];
+            
+            // Start location tracking in Weather.framework
+            if ([self.weatherLocationManager respondsToSelector:@selector(setLocationTrackingReady:activelyTracking:watchKitExtension:)]) {
+                [self.weatherLocationManager setLocationTrackingReady:YES activelyTracking:NO watchKitExtension:NO];
+            }
+                
+            if ([self.weatherLocationManager respondsToSelector:@selector(setLocationTrackingReady:activelyTracking:watchKitExtension:)]) {
+                [self.weatherLocationManager setLocationTrackingReady:YES activelyTracking:NO watchKitExtension:NO];
+            }
+            
+            // Set initial tracking active state if possible
+            if ([self _locationServicesAvailable]) {
+                [self.weatherLocationManager setLocationTrackingActive:YES];
+                [[objc_getClass("WeatherPreferences") sharedPreferences] setLocalWeatherEnabled:YES];
+            }
         });
     }
     
@@ -381,9 +398,6 @@
         [self.weatherLocationManager setLocationTrackingReady:YES activelyTracking:NO watchKitExtension:NO];
     }
     
-    [self.weatherLocationManager setLocationTrackingActive:YES];
-    [[objc_getClass("WeatherPreferences") sharedPreferences] setLocalWeatherEnabled:YES];
-    
     if ([locationUpdater respondsToSelector:@selector(updateWeatherForLocation:city:withCompletionHandler:)]) {
         [locationUpdater updateWeatherForLocation:self.currentCity.location city:self.currentCity withCompletionHandler:^{
             completionHandler(self.currentCity);
@@ -393,9 +407,6 @@
             completionHandler(self.currentCity);
         }];
     }
-
-    [self.weatherLocationManager setLocationTrackingActive:NO];
-    [self.weatherLocationManager setLocationTrackingIsReady:NO];
 }
 
 @end
