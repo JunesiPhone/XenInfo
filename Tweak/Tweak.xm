@@ -467,6 +467,7 @@ static MPUNowPlayingController *globalMPUNowPlaying;
 
 %hook SBClockNotificationManager
 
+// iOS 10+
 - (void)_updateAlarmStatusBarItemForPendingNotificationRequests:(id)arg1 {
     %orig;
     
