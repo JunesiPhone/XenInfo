@@ -36,18 +36,22 @@
 @end
 
 @interface WeatherLocationManager : NSObject
+@property (assign,nonatomic) unsigned long long updateInterval;
 + (instancetype)sharedWeatherLocationManager;
 - (void)setLocationTrackingActive:(BOOL)arg1;
 - (void)setLocationTrackingIsReady:(char)arg1 ;
 - (void)setLocationTrackingReady:(BOOL)arg1 activelyTracking:(BOOL)arg2;
 - (void)setDelegate:(id)arg1;
 - (void)setLocationTrackingReady:(bool)arg1 activelyTracking:(bool)arg2 watchKitExtension:(bool)arg3;
+
+- (void)forceLocationUpdate;
 @end
 
 @interface City : NSObject
 @property (nonatomic, copy) NSArray *dayForecasts;
 @property (nonatomic, copy) NSArray *hourlyForecasts;
 @property (assign,nonatomic) BOOL isLocalWeatherCity;
+@property (nonatomic,retain) id wfLocation;
 @property (nonatomic,copy) NSString * woeid;
 @property (nonatomic,copy) NSString * name;
 @property (nonatomic,copy) NSString * state;
@@ -114,5 +118,52 @@
 @property (assign,nonatomic) long long conditionCode;
 - (float)percentPrecipitation;
 @end;
+
+// iOS 11+ only
+
+@interface WACurrentForecast : NSObject
+@property (nonatomic,retain) WFTemperature *temperature;
+@property (nonatomic,retain) WFTemperature *feelsLike;
+@property (assign,nonatomic) float windSpeed;
+@property (assign,nonatomic) float windDirection;
+@property (assign,nonatomic) float humidity;
+@property (assign,nonatomic) float dewPoint;
+@property (assign,nonatomic) float visibility;
+@property (assign,nonatomic) float pressure;
+@property (assign,nonatomic) unsigned long long pressureRising;
+@property (assign,nonatomic) unsigned long long UVIndex;
+@property (assign,nonatomic) float precipitationPast24Hours;
+@property (assign,nonatomic) long long conditionCode;
+@property (assign,nonatomic) unsigned long long observationTime;
+@end
+
+@interface WFLocation : NSObject
+@end
+
+@interface WAForecastModel : NSObject
+@property (nonatomic,retain) City *city;
+@property (nonatomic,retain) WFLocation *location;
+@end
+
+@class WATodayModel;
+@protocol WATodayModelObserver <NSObject>
+@required
+- (void)todayModelWantsUpdate:(WATodayModel*)arg1;
+- (void)todayModel:(WATodayModel*)arg1 forecastWasUpdated:(WAForecastModel*)arg2;
+@end
+
+@interface WATodayModel : NSObject
+@property (nonatomic,retain) WAForecastModel *forecastModel;
++ (instancetype)autoupdatingLocationModelWithPreferences:(id)arg1 effectiveBundleIdentifier:(NSString*)arg2;
++ (instancetype)modelWithLocation:(WFLocation*)arg1;
+- (void)addObserver:(id<WATodayModelObserver>)arg1;
+- (void)removeObserver:(id<WATodayModelObserver>)arg1;
+- (BOOL)executeModelUpdateWithCompletion:(/*^block*/id)arg1 ;
+@end
+
+@interface WATodayAutoupdatingLocationModel : WATodayModel
+-(void)setLocationServicesActive:(BOOL)arg1;
+-(void)setIsLocationTrackingEnabled:(BOOL)arg1;
+@end
 
 #endif /* XIWeatherHeaders_h */

@@ -10,16 +10,17 @@
 #import <CoreLocation/CoreLocation.h>
 
 #import "../Internal/XIWidgetDataProvider-Protocol.h"
+#import "XIWeather-Protocol.h"
 
-@interface XIWeather : NSObject <XIWidgetDataProvider, CLLocationManagerDelegate>
+#import "XITWCWeather.h"
+#import "XIWAWeather.h"
+
+@interface XIWeather : NSObject <XIWidgetDataProvider, CLLocationManagerDelegate, XIWeatherDelegate>
 
 // Delegate is stored to communicate data back to widgets
 @property (nonatomic, weak) id<XIWidgetManagerDelegate> delegate;
 
-// Cached variables between refreshes.
-
-// Provider-specific variables
-@property (nonatomic, readwrite) BOOL deviceIsAsleep;
-@property (nonatomic, readwrite) BOOL refreshQueuedDuringDeviceSleep;
+@property (nonatomic, strong) XITWCWeather *twcWeather;
+@property (nonatomic, strong) XIWAWeather *waWeather;
 
 @end

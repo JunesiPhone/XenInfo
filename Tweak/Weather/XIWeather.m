@@ -10,11 +10,11 @@
 #import "XIWeatherHeaders.h"
 #import "../Internal/XIWidgetManager.h"
 #import <objc/runtime.h>
+#import <substrate.h>
 
 #define UPDATE_INTERVAL 30 // minutes
 
 @interface XIWeather ()
-@property (nonatomic, strong) CLLocationManager *locationManager;
 @property (nonatomic, strong) WeatherLocationManager* weatherLocationManager;
 @property (nonatomic, strong) City *currentCity;
 
@@ -30,18 +30,20 @@
 
 // Called when the device enters sleep mode
 - (void)noteDeviceDidEnterSleep {
-    self.deviceIsAsleep = YES;
+    // Notify appropriate updater.
+    if (self.waWeather)
+        [self.waWeather noteDeviceDidEnterSleep];
+    else if (self.twcWeather)
+        [self.twcWeather noteDeviceDidEnterSleep];
 }
 
 // Called on the reverse
 - (void)noteDeviceDidExitSleep {
-    self.deviceIsAsleep = NO;
-    
-    // Undertake a refresh if one was queued during sleep.
-    if (self.refreshQueuedDuringDeviceSleep) {
-        [self requestRefresh];
-        self.refreshQueuedDuringDeviceSleep = NO;
-    }
+    // Notify appropriate updater.
+    if (self.waWeather)
+        [self.waWeather noteDeviceDidExitSleep];
+    else if (self.twcWeather)
+        [self.twcWeather noteDeviceDidExitSleep];
 }
 
 // Register a delegate object to call upon when new data becomes available.
@@ -55,23 +57,11 @@
 }
 
 - (void)requestRefresh {
-    if (self.deviceIsAsleep) {
-        self.refreshQueuedDuringDeviceSleep = YES;
-        return;
-    }
-    
-    if (!self.currentCity)
-        self.currentCity = [self _currentCity];
-    
-    if ([self _locationServicesAvailable]) {
-        [self _refreshWeatherWithCompletion:^(City *city) {
-            [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIWeather topic]];
-        }];
-    } else {
-        [self _refreshWeatherNoLocationWithCompletion:^(City *city) {
-            [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIWeather topic]];
-        }];
-    }
+    // Request appropriate updater to update.
+    if (self.waWeather)
+        [self.waWeather requestRefresh];
+    else if (self.twcWeather)
+        [self.twcWeather requestRefresh];
 }
 
 - (NSString*)_variablesToJSString {
@@ -119,7 +109,8 @@
     int temp = [self _convertTemperature:self.currentCity.temperature];
     int feelslike = [self _convertTemperature:self.currentCity.feelsLike];
     
-    NSString *conditionString = @"Use weather.conditionCode"; // TODO: Really?
+    // Grabs translated condition string
+    NSString *conditionString = [self _conditionNameFromCode:self.currentCity.conditionCode];
     
     NSString *userTemperatureUnit = [[objc_getClass("WeatherPreferences") sharedPreferences] isCelsius] ? @"C" : @"F";
     
@@ -157,7 +148,7 @@
         }
         
         [hourlyForecasts addObject:@{
-                                     @"time": hourForecast.time,
+                                     @"time": hourForecast.time != nil ? hourForecast.time : @"00:00",
                                      @"conditionCode": [NSNumber numberWithLong:hourForecast.conditionCode],
                                      @"temperature": [NSNumber numberWithInt:temperature],
                                      @"percentPrecipitation": [NSNumber numberWithInt:hourForecast.percentPrecipitation],
@@ -180,7 +171,7 @@
                                   @"celsius": userTemperatureUnit,
                                   @"isDay": [NSNumber numberWithBool:self.currentCity.isDay],
                                   @"conditionCode": [NSNumber numberWithInt:self.currentCity.conditionCode],
-                                  @"updateTimeString": self.currentCity.updateTimeString,
+                                  @"updateTimeString": self.currentCity.updateTimeString != nil ? self.currentCity.updateTimeString : @"",
                                   @"humidity": [NSNumber numberWithInt:(int)roundf(self.currentCity.humidity)],
                                   @"dewPoint": [NSNumber numberWithInt:(int)roundf(self.currentCity.dewPoint)],
                                   @"windChill": [NSNumber numberWithInt:(int)roundf(self.currentCity.windChill)],
@@ -213,73 +204,49 @@
     return input;
 }
 
+- (NSString*)_conditionNameFromCode:(int)condition {
+    MSImageRef weather = MSGetImageByName("/System/Library/PrivateFrameworks/Weather.framework/Weather");
+    if (weather && [[UIDevice currentDevice] systemVersion].floatValue < 11.0) {
+        CFStringRef *_weatherDescription = (CFStringRef*)MSFindSymbol(weather, "_WeatherDescription") + condition;
+        NSString *cond = (__bridge id)*_weatherDescription;
+        return [[NSBundle bundleWithPath:@"/System/Library/PrivateFrameworks/Weather.framework"] localizedStringForKey:cond value:@"" table:@"WeatherFrameworkLocalizableStrings"];
+    } else if (weather && [[UIDevice currentDevice] systemVersion].floatValue >= 11.0) {
+        CFStringRef (*WAConditionsLineStringFromConditionCode)() = MSFindSymbol(weather, "_WAConditionsLineStringFromConditionCode");
+        
+        NSString *cond = (__bridge id)WAConditionsLineStringFromConditionCode(condition);
+        return cond;
+    }
+    
+    return @"";
+}
+
 #pragma mark Provider specific methods
 
 - (instancetype)init {
     self = [super init];
     
     if (self) {
-        self.refreshQueuedDuringDeviceSleep = YES; // Refresh once device comes online next
         self.cachedFormatter = [NSDateFormatter new];
-        self.updateTimer = [NSTimer scheduledTimerWithTimeInterval:UPDATE_INTERVAL * 60
-                                                            target:self
-                                                          selector:@selector(requestRefresh)
-                                                          userInfo:nil
-                                                           repeats:YES];
         
-        // Location stuff
-        self.locationManager = [[CLLocationManager alloc] init];
-        
-        self.weatherLocationManager = [objc_getClass("WeatherLocationManager") sharedWeatherLocationManager];
-        [self.weatherLocationManager setDelegate:self.locationManager];
-        
-        self.locationManager.delegate = self;
-        
-        self.currentCity = [self _currentCity];
-        
-        // Do an initial update
-        dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5.0);
-        dispatch_after(delay, dispatch_get_main_queue(), ^(void){
-            [self requestRefresh];
-            
-            // Start location tracking in Weather.framework
-            if ([self.weatherLocationManager respondsToSelector:@selector(setLocationTrackingReady:activelyTracking:watchKitExtension:)]) {
-                [self.weatherLocationManager setLocationTrackingReady:YES activelyTracking:NO watchKitExtension:NO];
-            }
-                
-            if ([self.weatherLocationManager respondsToSelector:@selector(setLocationTrackingReady:activelyTracking:watchKitExtension:)]) {
-                [self.weatherLocationManager setLocationTrackingReady:YES activelyTracking:NO watchKitExtension:NO];
-            }
-            
-            // Set initial tracking active state if possible
-            if ([self _locationServicesAvailable]) {
-                [self.weatherLocationManager setLocationTrackingActive:YES];
-                [[objc_getClass("WeatherPreferences") sharedPreferences] setLocalWeatherEnabled:YES];
-            }
-        });
+        // Init appropriate weather updater for iOS version.
+        if (objc_getClass("WATodayModel")) {
+            self.waWeather = [[XIWAWeather alloc] init];
+            self.waWeather.delegate = self;
+            self.currentCity  = self.waWeather.currentCity; // Initial setting of city
+        } else {
+            self.twcWeather = [[XITWCWeather alloc] init];
+            self.twcWeather.delegate = self;
+            self.currentCity  = self.twcWeather.currentCity; // Initial setting of city
+        }
     }
     
     return self;
 }
 
-- (BOOL)_locationServicesAvailable {
-    return [CLLocationManager locationServicesEnabled];
-}
-
-- (City*)_currentCity {
-    if ([self _locationServicesAvailable]) {
-        return [[objc_getClass("WeatherPreferences") sharedPreferences] localWeatherCity];
-    } else {
-        if (![[objc_getClass("WeatherPreferences") sharedPreferences] respondsToSelector:@selector(loadSavedCityAtIndex:)]) {
-            @try {
-                return [[[objc_getClass("WeatherPreferences") sharedPreferences] loadSavedCities] firstObject];
-            } @catch (NSException *e) {
-                Xlog(@"Failed to load first city in Weather.app for reason:\n%@", e);
-                return nil;
-            }
-        } else
-            return [[objc_getClass("WeatherPreferences") sharedPreferences] loadSavedCityAtIndex:0];
-    }
+- (void)didUpdateCity:(id)city {
+    // City did update, this is now the current city.
+    self.currentCity = city;
+    [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIWeather topic]];
 }
 
 - (int)_convertTemperature:(id)temperature {
@@ -371,42 +338,6 @@
     string = [NSString stringWithFormat:@"%c%c:%c%c%@", one, two, three, four, suffix];
     
     return string;
-}
-
-- (void)_refreshWeatherNoLocationWithCompletion:(void (^)(City*))completionHandler {
-    TWCLocationUpdater *locationUpdater = [objc_getClass("TWCLocationUpdater") sharedLocationUpdater];
-    
-    if ([locationUpdater respondsToSelector:@selector(updateWeatherForLocation:city:withCompletionHandler:)]) {
-        [locationUpdater updateWeatherForLocation:self.currentCity.location city:self.currentCity withCompletionHandler:^{
-            completionHandler(self.currentCity);
-        }];
-    } else if ([locationUpdater respondsToSelector:@selector(_updateWeatherForLocation:city:completionHandler:)]) {
-        [[objc_getClass("TWCLocationUpdater") sharedLocationUpdater] _updateWeatherForLocation:self.currentCity.location city:self.currentCity completionHandler:^{
-            completionHandler(self.currentCity);
-        }];
-    }
-}
-
-- (void)_refreshWeatherWithCompletion:(void (^)(City*))completionHandler {
-    TWCLocationUpdater *locationUpdater = [objc_getClass("TWCLocationUpdater") sharedLocationUpdater];
-    
-    if ([self.weatherLocationManager respondsToSelector:@selector(setLocationTrackingReady:activelyTracking:watchKitExtension:)]) {
-            [self.weatherLocationManager setLocationTrackingReady:YES activelyTracking:NO watchKitExtension:NO];
-    }
-    
-    if ([self.weatherLocationManager respondsToSelector:@selector(setLocationTrackingReady:activelyTracking:watchKitExtension:)]) {
-        [self.weatherLocationManager setLocationTrackingReady:YES activelyTracking:NO watchKitExtension:NO];
-    }
-    
-    if ([locationUpdater respondsToSelector:@selector(updateWeatherForLocation:city:withCompletionHandler:)]) {
-        [locationUpdater updateWeatherForLocation:self.currentCity.location city:self.currentCity withCompletionHandler:^{
-            completionHandler(self.currentCity);
-        }];
-    } else if ([locationUpdater respondsToSelector:@selector(_updateWeatherForLocation:city:completionHandler:)]) {
-        [[objc_getClass("TWCLocationUpdater") sharedLocationUpdater] _updateWeatherForLocation:self.currentCity.location city:self.currentCity completionHandler:^{
-            completionHandler(self.currentCity);
-        }];
-    }
 }
 
 @end

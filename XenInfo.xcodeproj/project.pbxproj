@@ -24,6 +24,11 @@
 		C978F96420C05BBC005C20B8 /* XIWidgetDataProvider-Protocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "XIWidgetDataProvider-Protocol.h"; sourceTree = "<group>"; };
 		C978F96520C05EFF005C20B8 /* Tweak.xm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = Tweak.xm; sourceTree = "<group>"; };
 		C978F96720C08453005C20B8 /* XIMusicHeaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIMusicHeaders.h; sourceTree = "<group>"; };
+		C97DAFF1218E45A700217363 /* XIWAWeather.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIWAWeather.h; sourceTree = "<group>"; };
+		C97DAFF2218E45A700217363 /* XIWAWeather.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XIWAWeather.m; sourceTree = "<group>"; };
+		C97DAFF3218E45D200217363 /* XITWCWeather.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XITWCWeather.h; sourceTree = "<group>"; };
+		C97DAFF4218E45D200217363 /* XITWCWeather.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XITWCWeather.m; sourceTree = "<group>"; };
+		C97DAFF5218E53EC00217363 /* XIWeather-Protocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "XIWeather-Protocol.h"; sourceTree = "<group>"; };
 		C9E16FCF20C08F5B00BA0031 /* XIInfoStats.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIInfoStats.h; sourceTree = "<group>"; };
 		C9E16FD020C08F5C00BA0031 /* XIInfoStats.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XIInfoStats.m; sourceTree = "<group>"; };
 		C9E16FD120C0935A00BA0031 /* XIInfoStatsHeaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIInfoStatsHeaders.h; sourceTree = "<group>"; };
@@ -83,7 +88,12 @@
 			children = (
 				C978F96220C05BA4005C20B8 /* XIWeather.h */,
 				C978F96320C05BA4005C20B8 /* XIWeather.m */,
+				C97DAFF3218E45D200217363 /* XITWCWeather.h */,
+				C97DAFF4218E45D200217363 /* XITWCWeather.m */,
+				C97DAFF1218E45A700217363 /* XIWAWeather.h */,
+				C97DAFF2218E45A700217363 /* XIWAWeather.m */,
 				C9FDC9EF21866387001448D2 /* XIWeatherHeaders.h */,
+				C97DAFF5218E53EC00217363 /* XIWeather-Protocol.h */,
 			);
 			path = Weather;
 			sourceTree = "<group>";
