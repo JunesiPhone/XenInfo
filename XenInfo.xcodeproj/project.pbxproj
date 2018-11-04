@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		C9285A16218F4D91009F3CCC /* Reachability.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Reachability.m; sourceTree = "<group>"; };
+		C9285A17218F4D91009F3CCC /* Reachability.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Reachability.h; sourceTree = "<group>"; };
+		C9285A18218F55A0009F3CCC /* XIAlarmsHeaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIAlarmsHeaders.h; sourceTree = "<group>"; };
 		C978F95120C057BE005C20B8 /* Tweak-old.xm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = "Tweak-old.xm"; sourceTree = "<group>"; };
 		C978F95220C05900005C20B8 /* control */ = {isa = PBXFileReference; lastKnownFileType = text; path = control; sourceTree = "<group>"; };
 		C978F95320C05900005C20B8 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
@@ -45,11 +48,31 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		C9285A14218F4D7C009F3CCC /* ThirdParty */ = {
+			isa = PBXGroup;
+			children = (
+				C9285A15218F4D91009F3CCC /* Reachability */,
+			);
+			name = ThirdParty;
+			path = "New Group";
+			sourceTree = "<group>";
+		};
+		C9285A15218F4D91009F3CCC /* Reachability */ = {
+			isa = PBXGroup;
+			children = (
+				C9285A17218F4D91009F3CCC /* Reachability.h */,
+				C9285A16218F4D91009F3CCC /* Reachability.m */,
+			);
+			name = Reachability;
+			path = ThirdParty/Reachability;
+			sourceTree = SOURCE_ROOT;
+		};
 		C978F94520C056B6005C20B8 = {
 			isa = PBXGroup;
 			children = (
 				C978F95220C05900005C20B8 /* control */,
 				C978F95320C05900005C20B8 /* Makefile */,
+				C9285A14218F4D7C009F3CCC /* ThirdParty */,
 				C978F95420C0593C005C20B8 /* include */,
 				C978F95020C057BE005C20B8 /* Tweak */,
 			);
@@ -152,6 +175,7 @@
 			children = (
 				C9E16FDA20C09ECA00BA0031 /* XIAlarms.h */,
 				C9E16FDB20C09ECA00BA0031 /* XIAlarms.m */,
+				C9285A18218F55A0009F3CCC /* XIAlarmsHeaders.h */,
 			);
 			path = Alarms;
 			sourceTree = "<group>";
