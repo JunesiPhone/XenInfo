@@ -21,6 +21,8 @@
 #import "../Alarms/XIAlarms.h"
 #import "../Statusbar/XIStatusBar.h"
 
+#import "../../ThirdParty/Reachability/Reachability.h"
+
 // Debug logging with nice printing
 void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSString *format, ...) {
     // Type to hold information about variable arguments.
@@ -86,6 +88,30 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
         for (id<XIWidgetDataProvider> provider in self.widgetDataProviders.allValues) {
             [provider registerDelegate:self];
         }
+        
+        // Setup network connectivity notifications
+        Reachability* reach = [Reachability reachabilityWithHostname:@"www.google.com"];
+        
+        reach.reachableBlock = ^(Reachability *reach) {
+            for (NSString *topic in self.widgetDataProviders.allKeys) {
+                id<XIWidgetDataProvider> provider = [self.widgetDataProviders objectForKey:topic];
+                    
+                if ([provider respondsToSelector:@selector(networkWasConnected)])
+                    [provider networkWasConnected];
+            }
+        };
+        
+        reach.unreachableBlock = ^(Reachability *reach) {
+            for (NSString *topic in self.widgetDataProviders.allKeys) {
+                id<XIWidgetDataProvider> provider = [self.widgetDataProviders objectForKey:topic];
+                
+                if ([provider respondsToSelector:@selector(networkWasDisconnected)])
+                    [provider networkWasDisconnected];
+            }
+        };
+        
+        // Start the notifier, retains itself
+        [reach startNotifier];
     }
     
     return self;

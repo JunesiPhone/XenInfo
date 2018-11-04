@@ -14,16 +14,13 @@
 
 @interface XIWAWeather : NSObject <WATodayModelObserver>
 
-@property (nonatomic,retain) WATodayModel *todayModel;
-@property (nonatomic,retain) NSTimer *updateTimer;
-@property (nonatomic, readwrite) BOOL deviceIsAsleep;
-@property (nonatomic, readwrite) BOOL refreshQueuedDuringDeviceSleep;
 @property (nonatomic, strong) City *currentCity;
-
 @property (nonatomic, weak) id<XIWeatherDelegate> delegate;
 
 - (void)noteDeviceDidEnterSleep;
 - (void)noteDeviceDidExitSleep;
+- (void)networkWasDisconnected;
+- (void)networkWasConnected;
 - (void)requestRefresh;
 
 @end

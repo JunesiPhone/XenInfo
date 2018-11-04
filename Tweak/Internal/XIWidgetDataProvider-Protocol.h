@@ -6,13 +6,13 @@
 //  Copyright © 2018 Matt Clarke. All rights reserved.
 //
 
-@protocol XIWidgetManagerDelegate
+@protocol XIWidgetManagerDelegate <NSObject>
 // Call to update the delegate with new data on a topic.
 - (void)updateWidgetsWithNewData:(NSString*)javascriptString onTopic:(NSString*)topic;
 @end
 
-@protocol XIWidgetDataProvider
-
+@protocol XIWidgetDataProvider <NSObject>
+@required
 // The data topic provided by the data provider
 + (NSString*)topic;
 
@@ -29,4 +29,12 @@
 
 // Called to refresh the data in the provider.
 - (void)requestRefresh;
+
+@optional
+// Called when network access is lost
+- (void)networkWasDisconnected;
+
+// Called when network access is restored
+- (void)networkWasConnected;
+
 @end

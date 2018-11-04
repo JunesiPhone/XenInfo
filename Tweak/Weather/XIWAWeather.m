@@ -12,6 +12,17 @@
 
 #define UPDATE_INTERVAL 30 // minutes
 
+@interface XIWAWeather ()
+
+@property (nonatomic,retain) WATodayModel *todayModel;
+@property (nonatomic,retain) NSTimer *updateTimer;
+@property (nonatomic, readwrite) BOOL deviceIsAsleep;
+@property (nonatomic, readwrite) BOOL refreshQueuedDuringDeviceSleep;
+@property (nonatomic, readwrite) BOOL networkIsDisconnected;
+@property (nonatomic, readwrite) BOOL refreshQueuedDuringNetworkDisconnected;
+
+@end
+
 @implementation XIWAWeather
 
 - (instancetype)init {
@@ -46,9 +57,28 @@
     }
 }
 
+- (void)networkWasDisconnected {
+    self.networkIsDisconnected = YES;
+}
+
+- (void)networkWasConnected {
+    self.networkIsDisconnected = NO;
+    
+    // Undertake a refresh if one was queued
+    if (self.refreshQueuedDuringNetworkDisconnected) {
+        [self requestRefresh];
+        self.refreshQueuedDuringNetworkDisconnected = NO;
+    }
+}
+
 - (void)requestRefresh {
     if (self.deviceIsAsleep) {
         self.refreshQueuedDuringDeviceSleep = YES;
+        return;
+    }
+    
+    if (self.networkIsDisconnected) {
+        self.refreshQueuedDuringNetworkDisconnected = YES;
         return;
     }
     

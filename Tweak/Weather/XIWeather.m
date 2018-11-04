@@ -46,6 +46,22 @@
         [self.twcWeather noteDeviceDidExitSleep];
 }
 
+// Called when network access is lost
+- (void)networkWasDisconnected {
+    if (self.waWeather)
+        [self.waWeather networkWasDisconnected];
+    else if (self.twcWeather)
+        [self.twcWeather networkWasDisconnected];
+}
+
+// Called when network access is restored
+- (void)networkWasConnected {
+    if (self.waWeather)
+        [self.waWeather networkWasConnected];
+    else if (self.twcWeather)
+        [self.twcWeather networkWasConnected];
+}
+
 // Register a delegate object to call upon when new data becomes available.
 - (void)registerDelegate:(id<XIWidgetManagerDelegate>)delegate {
     self.delegate = delegate;
