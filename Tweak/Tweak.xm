@@ -460,6 +460,22 @@ static MPUNowPlayingController *globalMPUNowPlaying;
 %end
 
 ///////////////////////////////////////////////////////////////
+#pragma mark Alarms
+///////////////////////////////////////////////////////////////
+
+#import "Alarms/XIAlarms.h"
+
+%hook SBClockNotificationManager
+
+- (void)_updateAlarmStatusBarItemForPendingNotificationRequests:(id)arg1 {
+    %orig;
+    
+    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+}
+
+%end
+
+///////////////////////////////////////////////////////////////
 #pragma mark Constructor
 ///////////////////////////////////////////////////////////////
 
