@@ -10,12 +10,8 @@
 		C9285A16218F4D91009F3CCC /* Reachability.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Reachability.m; sourceTree = "<group>"; };
 		C9285A17218F4D91009F3CCC /* Reachability.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Reachability.h; sourceTree = "<group>"; };
 		C9285A18218F55A0009F3CCC /* XIAlarmsHeaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIAlarmsHeaders.h; sourceTree = "<group>"; };
-		C978F95120C057BE005C20B8 /* Tweak-old.xm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = "Tweak-old.xm"; sourceTree = "<group>"; };
 		C978F95220C05900005C20B8 /* control */ = {isa = PBXFileReference; lastKnownFileType = text; path = control; sourceTree = "<group>"; };
 		C978F95320C05900005C20B8 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
-		C978F95520C0593C005C20B8 /* headers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = headers.h; sourceTree = "<group>"; };
-		C978F95620C0593C005C20B8 /* weather.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = weather.h; sourceTree = "<group>"; };
-		C978F95720C0593C005C20B8 /* substrate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = substrate.h; sourceTree = "<group>"; };
 		C978F95C20C05B85005C20B8 /* XIWidgetManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIWidgetManager.h; sourceTree = "<group>"; };
 		C978F95D20C05B85005C20B8 /* XIWidgetManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XIWidgetManager.m; sourceTree = "<group>"; };
 		C978F95E20C05B93005C20B8 /* XISystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XISystem.h; sourceTree = "<group>"; };
@@ -73,7 +69,6 @@
 				C978F95220C05900005C20B8 /* control */,
 				C978F95320C05900005C20B8 /* Makefile */,
 				C9285A14218F4D7C009F3CCC /* ThirdParty */,
-				C978F95420C0593C005C20B8 /* include */,
 				C978F95020C057BE005C20B8 /* Tweak */,
 			);
 			sourceTree = "<group>";
@@ -81,7 +76,6 @@
 		C978F95020C057BE005C20B8 /* Tweak */ = {
 			isa = PBXGroup;
 			children = (
-				C978F95120C057BE005C20B8 /* Tweak-old.xm */,
 				C978F96520C05EFF005C20B8 /* Tweak.xm */,
 				C978F95B20C05B76005C20B8 /* Internal */,
 				C9E16FD520C09EA200BA0031 /* Events */,
@@ -94,16 +88,6 @@
 				C978F95820C05B11005C20B8 /* Weather */,
 			);
 			path = Tweak;
-			sourceTree = "<group>";
-		};
-		C978F95420C0593C005C20B8 /* include */ = {
-			isa = PBXGroup;
-			children = (
-				C978F95520C0593C005C20B8 /* headers.h */,
-				C978F95620C0593C005C20B8 /* weather.h */,
-				C978F95720C0593C005C20B8 /* substrate.h */,
-			);
-			path = include;
 			sourceTree = "<group>";
 		};
 		C978F95820C05B11005C20B8 /* Weather */ = {
