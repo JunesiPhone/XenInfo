@@ -49,7 +49,7 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
 }
 
 @interface XIWidgetManager ()
-@property (nonatomic, strong) NSMutableArray *queuedUpdatesWhileDeviceSleeping;
+@property (nonatomic, strong) NSMutableDictionary *queuedUpdatesWhileDeviceSleeping;
 @property (nonatomic, readwrite) BOOL deviceSleepState;
 @end
 
@@ -82,7 +82,7 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
         self.registeredWidgets = [NSMutableArray array];
         self.widgetDataProviders = [self _populateWidgetDataProviders];
         
-        self.queuedUpdatesWhileDeviceSleeping = [NSMutableArray array];
+        self.queuedUpdatesWhileDeviceSleeping = [NSMutableDictionary dictionary];
         self.deviceSleepState = NO;
         
         for (id<XIWidgetDataProvider> provider in self.widgetDataProviders.allValues) {
@@ -218,9 +218,8 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
 - (void)updateWidgetsWithNewData:(NSString*)javascriptString onTopic:(NSString*)topic {
     if (YES == self.deviceSleepState) {
         // Save this update for when the device wakes, to avoid any weirdness like screen freezes!
-        NSDictionary *update = @{@"topic": topic, @"javascriptString": javascriptString };
-        
-        [self.queuedUpdatesWhileDeviceSleeping addObject:update];
+        // Only store the latest update
+        [self.queuedUpdatesWhileDeviceSleeping setObject:javascriptString forKey:topic];
     } else {
         Xlog(@"Updating with '%@' on '%@'", javascriptString, topic);
         
@@ -295,14 +294,13 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
     }
     
     // Run any queued data updates
-    Xlog(@"Running queued updates. Count: %d", [self.queuedUpdatesWhileDeviceSleeping count]);
-    for (NSDictionary *update in [self.queuedUpdatesWhileDeviceSleeping copy]) {
-        NSString *topic = update[@"topic"];
-        NSString *javascriptString = update[@"javascriptString"];
+    Xlog(@"Running queued updates. Count: %d", [self.queuedUpdatesWhileDeviceSleeping.allKeys count]);
+    for (NSString *topic in [self.queuedUpdatesWhileDeviceSleeping allKeys]) {
+        NSString *javascriptString = self.queuedUpdatesWhileDeviceSleeping[topic];
         
         [self updateWidgetsWithNewData:javascriptString onTopic:topic];
         
-        [self.queuedUpdatesWhileDeviceSleeping removeObject:update];
+        [self.queuedUpdatesWhileDeviceSleeping removeObjectForKey:topic];
     }
 }
 
