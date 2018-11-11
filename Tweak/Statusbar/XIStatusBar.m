@@ -89,6 +89,9 @@
 }
 
 - (NSString*)_escapeString:(NSString*)input {
+    if (!input)
+        return @"";
+    
     input = [input stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
     input = [input stringByReplacingOccurrencesOfString: @"\"" withString:@"\\\""];
     
