@@ -60,9 +60,11 @@
             continue;
         }
         
+        NSString *title = [self _escapeString:reminder.title];
+        NSString *dueDate = [self.dateFormatter stringFromDate:[self _dueDateFromReminder:reminder]];
         NSDictionary *parsed = @{
-                                      @"title": [self _escapeString:reminder.title],
-                                      @"dueDate": [self.dateFormatter stringFromDate:[self _dueDateFromReminder:reminder]],
+                                      @"title": title ? title : @"",
+                                      @"dueDate": dueDate ? dueDate : @"",
                                       @"dueDateTimestamp": [NSNumber numberWithInt:[self _dueDateFromReminder:reminder].timeIntervalSince1970 * 1000],
                                       @"priority": [NSNumber numberWithLong:reminder.priority]
                                       };
@@ -163,7 +165,9 @@
     }
     
     NSCalendar *calendar = [NSCalendar currentCalendar];
-    return [calendar dateFromComponents:reminder.dueDateComponents];
+    NSDate *date = [calendar dateFromComponents:reminder.dueDateComponents];
+    
+    return date ? date : [NSDate date];
 }
 
 @end

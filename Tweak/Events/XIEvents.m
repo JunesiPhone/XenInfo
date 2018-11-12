@@ -64,7 +64,7 @@
                                       @"title": [self _escapeString:event.title],
                                       @"location": [self _escapeString:event.location],
                                       @"isAllDay": [NSNumber numberWithBool:event.allDay],
-                                      @"date": [self.dateFormatter stringFromDate:event.startDate],
+                                      @"date": event.startDate ? [self.dateFormatter stringFromDate:event.startDate] : @"",
                                       @"startTimeTimestamp": [NSNumber numberWithInt:event.startDate.timeIntervalSince1970 * 1000],
                                       @"endTimeTimestamp": [NSNumber numberWithInt:event.endDate.timeIntervalSince1970 * 1000],
                                       @"associatedCalendarName": [self _escapeString:event.calendar.title],
@@ -102,6 +102,9 @@
 }
 
 - (NSString*)_escapeString:(NSString*)input {
+    if (!input)
+        return @"";
+    
     input = [input stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
     input = [input stringByReplacingOccurrencesOfString: @"\"" withString:@"\\\""];
     
@@ -134,7 +137,7 @@
 }
 
 - (void)_setupNotificationMonitoring {
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(calendarUpdateNotificationRecieved:) name:@"EKEventStoreChangedNotification" object:self.store];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_calendarUpdateNotificationRecieved:) name:@"EKEventStoreChangedNotification" object:self.store];
     [self _monitorPath:@"/var/mobile/Library/Preferences/com.apple.mobilecal.plist"];
 }
 
@@ -208,6 +211,10 @@
 }
 
 - (NSString *)_hexStringFromColor:(CGColorRef)color {
+    if (!color) {
+        return @"#cccccc";
+    }
+    
     const CGFloat *components = CGColorGetComponents(color);
     
     CGFloat r = components[0];
