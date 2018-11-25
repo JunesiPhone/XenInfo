@@ -233,6 +233,9 @@
         CFStringRef (*WAConditionsLineStringFromConditionCode)() = MSFindSymbol(weather, "_WAConditionsLineStringFromConditionCode");
         
         NSString *cond = (__bridge id)WAConditionsLineStringFromConditionCode(condition);
+        if (!cond)
+            cond = @"";
+        
         return cond;
     }
     
@@ -248,7 +251,7 @@
         self.cachedFormatter = [NSDateFormatter new];
         
         // Init appropriate weather updater for iOS version.
-        if (objc_getClass("WATodayModel")) {
+        if (objc_getClass("WATodayModel")) { // Should cover iOS 10 and 11
             self.waWeather = [[XIWAWeather alloc] init];
             self.waWeather.delegate = self;
             self.currentCity  = self.waWeather.currentCity; // Initial setting of city
