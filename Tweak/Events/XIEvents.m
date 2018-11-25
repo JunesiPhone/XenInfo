@@ -29,12 +29,14 @@
 
 // Called when the device enters sleep mode
 - (void)noteDeviceDidEnterSleep {
-    // nop
+    // Stop filesystem monitoring
+    dispatch_suspend(_source);
 }
 
 // Called on the reverse
 - (void)noteDeviceDidExitSleep {
-    // nop
+    // Restart FS monitoring
+    dispatch_resume(_source);
 }
 
 // Register a delegate object to call upon when new data becomes available.
@@ -53,11 +55,11 @@
     
     // Called for new information being available.
     NSDate *startDate = [NSDate date];
-    NSDate *endDate = [NSDate dateWithTimeInterval:25920000 sinceDate:startDate];
+    NSDate *endDate = [NSDate dateWithTimeInterval:60*60*24*7 sinceDate:startDate];
     NSArray *events = [self _calendarEntriesBetweenStartTime:startDate andEndTime:endDate];
     
     // Parse the events!
-    NSDate *nextUpdateTime = endDate;
+    NSDate *nextUpdateTime = [NSDate dateWithTimeInterval:60*60 sinceDate:[NSDate date]]; // In an hour
     NSMutableArray *array = [NSMutableArray array];
     for (EKEvent *event in events) {
         NSDictionary *parsedEvent = @{

@@ -53,7 +53,7 @@
     NSArray *reminders = [self _reminderEntries];
     
     // Parse the reminders!
-    NSDate *nextUpdateTime = [NSDate dateWithTimeInterval:60*60 sinceDate:[NSDate date]]; // In an hour
+    //NSDate *nextUpdateTime = [NSDate dateWithTimeInterval:60*60 sinceDate:[NSDate date]]; // In an hour
     NSMutableArray *array = [NSMutableArray array];
     for (EKReminder *reminder in reminders) {
         if (reminder.isCompleted) {
@@ -78,7 +78,7 @@
     }
     
     // Schedule the update timer
-    NSTimeInterval interval = nextUpdateTime.timeIntervalSince1970 - [NSDate date].timeIntervalSince1970;
+    NSTimeInterval interval = 60 * 60; /*nextUpdateTime.timeIntervalSince1970 - [NSDate date].timeIntervalSince1970;*/
     self.updateTimer = [NSTimer scheduledTimerWithTimeInterval:interval
                                                         target:self
                                                       selector:@selector(requestRefresh)
