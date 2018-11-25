@@ -164,6 +164,8 @@
 @interface WATodayAutoupdatingLocationModel : WATodayModel
 -(void)setLocationServicesActive:(BOOL)arg1;
 -(void)setIsLocationTrackingEnabled:(BOOL)arg1;
+-(void)_teardownLocationManager;
+-(void)_kickstartLocationManager;
 @end
 
 #endif /* XIWeatherHeaders_h */

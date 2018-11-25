@@ -12,7 +12,9 @@
 
 @class City;
 
-@interface XIWAWeather : NSObject <WATodayModelObserver>
+@interface XIWAWeather : NSObject <WATodayModelObserver> {
+    BOOL _ignoreUpdateFlag;
+}
 
 @property (nonatomic, strong) City *currentCity;
 @property (nonatomic, weak) id<XIWeatherDelegate> delegate;
