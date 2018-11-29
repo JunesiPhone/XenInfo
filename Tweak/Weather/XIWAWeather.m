@@ -6,6 +6,33 @@
 //  Copyright © 2018 Matt Clarke. All rights reserved.
 //
 
+/*
+ * General notes:
+ * WATodayModel (and its autoupdating subclass) is available from iOS 10 onwards, and is used in both the
+ * Today widget for Weather, and the iPad weather UI on the Lockscreen.
+ *
+ * Here, an update timer is ran every X minutes to request an instance of WATodayModel to update its data,
+ * including current location for iOS 11+ users. This class is registered as an observer of this WATodayModel
+ * instance to be notified when the user toggles the value of Location Services in Settings. Then, new data can
+ * then be grabbed as needed to handle this change.
+ *
+ * Testing has shown though that Location Services run fairly continuously in the background when using an instance
+ * of WATodayAutoupdatingLocationModel. To combat this, location services are disabled until updates occur. Then,
+ * this sequence is followed:
+ * 1. Enable location services for the model
+ * 2. Wait a couple of seconds to get a new location fix if needed
+ * 3. Get new data
+ * 4. Start a timeout for locaiton services to improve its fix
+ *    This is reset if new updates are notified by the model in -todayModel:forecastWasUpdated:
+ * 5. On timeout firing, a new data request is made
+ * 6. Location services is disabled for the model
+ *
+ * This seems to work well with an update interval of 15 minutes.
+ *
+ * Additionally, if the device is asleep or no network connectivity is available, the update is queued until
+ * the device is awake and connected to the internet.
+ */
+
 #import "XIWAWeather.h"
 #import "../Internal/XIWidgetManager.h"
 #import <objc/runtime.h>

@@ -12,7 +12,20 @@
 #import <objc/runtime.h>
 #import <substrate.h>
 
-#define UPDATE_INTERVAL 30 // minutes
+/*
+ * General notes:
+ *
+ * Due to differences in iOS versions, different approaches to updating weather is taken. For iOS 9 users,
+ * a port of InfoStats 2's Weather functionality has been made. This however does not handle retrieving
+ * new location updates due to a missing entitlement in SpringBoard.
+ *
+ * iOS 10 and 11 users make use of WATodayModel introduced in 10. This is a much simplier API to request new data
+ * with, and supports automatic location updates for iOS 11+ users.
+ *
+ * Each approach is implemented as a separate class to keep things tidy, XITWCWeather and XIWAWeather. This current
+ * class acts as a proxy to those implementations, forwarding info like device sleep/wake state to them, and new
+ * City objects back again. This class is responsible for the actual parsing of the City object into a JSON string.
+ */
 
 @interface XIWeather ()
 @property (nonatomic, strong) WeatherLocationManager* weatherLocationManager;
