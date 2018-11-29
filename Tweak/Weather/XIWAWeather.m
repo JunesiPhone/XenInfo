@@ -10,14 +10,15 @@
 #import "../Internal/XIWidgetManager.h"
 #import <objc/runtime.h>
 
-#define UPDATE_INTERVAL 30 // minutes
+#define UPDATE_INTERVAL 15 // minutes
 #define LOCATION_TIMEOUT_INTERVAL 5 // seconds
 
 @interface XIWAWeather ()
 
-@property (nonatomic,retain) WATodayAutoupdatingLocationModel *todayModel;
-@property (nonatomic,retain) NSTimer *updateTimer;
-@property (nonatomic,retain) NSTimer *locationTrackingTimeoutTimer;
+@property (nonatomic, retain) WATodayAutoupdatingLocationModel *todayModel;
+@property (nonatomic, retain) NSTimer *updateTimer;
+@property (nonatomic, retain) NSTimer *locationTrackingTimeoutTimer;
+@property (nonatomic, retain) NSDate *lastUpdateTime;
 @property (nonatomic, readwrite) BOOL deviceIsAsleep;
 @property (nonatomic, readwrite) BOOL refreshQueuedDuringDeviceSleep;
 @property (nonatomic, readwrite) BOOL networkIsDisconnected;
@@ -38,8 +39,9 @@
                                                           userInfo:nil
                                                            repeats:YES];
         
-        // Set flag to default value
+        // Set default values
         _ignoreUpdateFlag = NO;
+        self.lastUpdateTime = nil;
         
         [self _setupTodayModels];
     }
@@ -124,8 +126,20 @@
 - (void)_locationTrackingTimeoutFired:(NSTimer*)timer {
     [timer invalidate];
     
-    _ignoreUpdateFlag = YES; // No need to run an update for this battery management change
-    [self.todayModel setIsLocationTrackingEnabled:NO];
+    // Grab final update just-in-case of new location data
+    [self.todayModel executeModelUpdateWithCompletion:^(BOOL arg1, NSError *arg2) {
+        if (!arg2 || [self _date:self.todayModel.forecastModel.city.updateTime isNewerThanDate:self.lastUpdateTime]) {
+            // Notify widgets if needed
+            [self.delegate didUpdateCity:self.todayModel.forecastModel.city];
+            
+            // Update last updated time
+            self.lastUpdateTime = self.todayModel.forecastModel.city.updateTime;
+        }
+        
+        // Turn off location tracking
+        _ignoreUpdateFlag = YES; // No need to run an update for this battery management change
+        [self.todayModel setIsLocationTrackingEnabled:NO];
+    }];
 }
 
 - (void)_updateModel:(WATodayAutoupdatingLocationModel*)todayModel {
@@ -138,14 +152,17 @@
     
     // Not exactly the most deterministic way to ensure a new location has arrived!
     // We just want to ensure there's sufficient time for location services to get new locations.
-    dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 3.0);
+    dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 1.5);
     dispatch_after(delay, dispatch_get_main_queue(), ^(void){
         
         // Request new data
         [todayModel executeModelUpdateWithCompletion:^(BOOL arg1, NSError *arg2) {
-            if (!arg2) {
+            if (!arg2 || [self _date:todayModel.forecastModel.city.updateTime isNewerThanDate:self.lastUpdateTime]) {
                 // Notify widgets
                 [self.delegate didUpdateCity:todayModel.forecastModel.city];
+                
+                // Update last updated time
+                self.lastUpdateTime = todayModel.forecastModel.city.updateTime;
             
                 // Start location tracking timeout - in the event of location being improved.
                 // Improvements will be reported to todayModel:forecastWasUpdated:
@@ -184,6 +201,14 @@
                                                                        selector:@selector(_locationTrackingTimeoutFired:)
                                                                        userInfo:nil
                                                                         repeats:NO];
+}
+
+- (BOOL)_date:(NSDate*)newDate isNewerThanDate:(NSDate*)oldDate {
+    if (!oldDate) {
+        return YES;
+    }
+    
+    return [newDate compare:oldDate] == NSOrderedDescending;
 }
 
 @end
