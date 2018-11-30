@@ -137,10 +137,14 @@
 
 // Override the navigationDelegate if updated
 - (void)setNavigationDelegate:(id)delegate {
-    if (![delegate isEqual:self])
-        self.hijackedNavigationDelegate = delegate;
-        
-    %orig((id<WKNavigationDelegate>)self);
+    if([delegate isKindOfClass:[objc_getClass("XENHWidgetController") class]]){
+        if(![delegate isEqual:self]){
+            self.hijackedNavigationDelegate = delegate;
+            %orig((id<WKNavigationDelegate>)self);
+        }
+    }else{
+        %orig;
+    }
 }
 
 // Add appropriate delegate methods, forwarding back to the hijacked navigationDelegate as
@@ -242,12 +246,16 @@
     return orig;
 }
 
+// Update the hijacked delegate if XEN controller
 - (void)setDelegate:(id<UIWebViewDelegate>)delegate {
-    // Update the hijacked delegate
-    if (![delegate isEqual:self])
-        self.hijackedDelegate = delegate;
-        
-    %orig((id<UIWebViewDelegate>)self);
+    if([delegate isKindOfClass:[objc_getClass("XENHWidgetController") class]]){
+        if(![delegate isEqual:self]){
+            self.hijackedDelegate = delegate;
+            %orig((id<UIWebViewDelegate>)self);
+        }
+    }else{
+        %orig;
+    }
 }
 
 %new
