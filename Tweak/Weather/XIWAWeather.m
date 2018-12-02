@@ -22,7 +22,7 @@
  * 1. Enable location services for the model
  * 2. Wait a couple of seconds to get a new location fix if needed
  * 3. Get new data
- * 4. Start a timeout for locaiton services to improve its fix
+ * 4. Start a timeout for location services to improve its fix
  *    This is reset if new updates are notified by the model in -todayModel:forecastWasUpdated:
  * 5. On timeout firing, a new data request is made
  * 6. Location services is disabled for the model
@@ -190,17 +190,17 @@
                 
                 // Update last updated time
                 self.lastUpdateTime = todayModel.forecastModel.city.updateTime;
-            
-                // Start location tracking timeout - in the event of location being improved.
-                // Improvements will be reported to todayModel:forecastWasUpdated:
-                [self.locationTrackingTimeoutTimer invalidate];
-                self.locationTrackingTimeoutTimer = [NSTimer scheduledTimerWithTimeInterval:LOCATION_TIMEOUT_INTERVAL
-                                                             target:self
-                                                           selector:@selector(_locationTrackingTimeoutFired:)
-                                                           userInfo:nil
-                                                            repeats:NO];
             }
         }];
+        
+        // Start location tracking timeout - in the event of location being improved.
+        // Improvements will be reported to todayModel:forecastWasUpdated:
+        [self.locationTrackingTimeoutTimer invalidate];
+        self.locationTrackingTimeoutTimer = [NSTimer scheduledTimerWithTimeInterval:LOCATION_TIMEOUT_INTERVAL
+                                                                             target:self
+                                                                           selector:@selector(_locationTrackingTimeoutFired:)
+                                                                           userInfo:nil
+                                                                            repeats:NO];
     });
 }
 
