@@ -52,10 +52,6 @@
                 [self.weatherLocationManager setLocationTrackingReady:YES activelyTracking:NO watchKitExtension:NO];
             }
             
-            if ([self.weatherLocationManager respondsToSelector:@selector(setLocationTrackingReady:activelyTracking:watchKitExtension:)]) {
-                [self.weatherLocationManager setLocationTrackingReady:YES activelyTracking:NO watchKitExtension:NO];
-            }
-            
             // Set initial tracking active state if possible
             if ([self _locationServicesAvailable]) {
                 [self.weatherLocationManager setLocationTrackingActive:YES];
