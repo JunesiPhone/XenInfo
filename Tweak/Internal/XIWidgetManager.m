@@ -222,24 +222,37 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
         [self.queuedUpdatesWhileDeviceSleeping setObject:javascriptString forKey:topic];
     } else {
         //Xlog(@"Updating with '%@' on '%@'", javascriptString, topic);
-        
-        // Loop over widget array, and call update as required.
-        for (id widget in self.registeredWidgets) {
-            if ([[widget class] isEqual:[UIWebView class]]) {
-                // Update JS variables
+    
+        [self _updateWidgetsWithNewData:javascriptString onTopic:topic];
+    }
+}
+
+- (void)_updateWidgetsWithNewData:(NSString*)javascriptString onTopic:(NSString*)topic {
+    // NOTE: Scheduling the entire loop below on the main thread is a bad idea
+    // This can cause choppiness in animations - better to submit smaller blocks per widget that
+    // can be serialised on the main thread around other executions
+    
+    // Loop over widget array, and call update as required.
+    for (id widget in self.registeredWidgets) {
+        if ([[widget class] isEqual:[UIWebView class]]) {
+            // Update JS variables
+            // Ensure we update widgets on the main thread
+            dispatch_async(dispatch_get_main_queue(), ^{
                 [widget stringByEvaluatingJavaScriptFromString:javascriptString];
-                
+            
                 // Notify of new change to variables
                 NSString* function = [NSString stringWithFormat:@"mainUpdate('%@')", topic];
                 [widget stringByEvaluatingJavaScriptFromString:function];
-            } else if ([[widget class] isEqual:[WKWebView class]]) {
-                // Update JS variables
+            });
+        } else if ([[widget class] isEqual:[WKWebView class]]) {
+            // Update JS variables
+            dispatch_async(dispatch_get_main_queue(), ^{
                 [widget evaluateJavaScript:javascriptString completionHandler:^(id object, NSError *error) {}];
-                
+            
                 // Notify of new change to variables
                 NSString* function = [NSString stringWithFormat:@"mainUpdate('%@')", topic];
                 [widget evaluateJavaScript:function completionHandler:^(id object, NSError *error) {}];
-            }
+            });
         }
     }
 }
