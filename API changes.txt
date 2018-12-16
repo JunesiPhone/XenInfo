@@ -1,0 +1,54 @@
+XenInfo API changes - v2.0
+
+Weather (Added):
+var weather = {
+    address -> geocoded address of the weather update's location. might only be accurate on iOS 11
+            -> format:
+                street -> the housenumber + street this location corresponds to
+                neighbourhood -> the local area the location is within
+                city -> the city the location is within. e.g., London, New York, etc...
+                zipCode -> the postal code the location is within. e.g., 95014, NG1 7AA, ...
+                county -> the county the location is within. e.g., Nottinghamshire, Santa Clara, ...
+                state -> current state the location is within. e.g., England (for UK users), California, ...
+                country -> country the location is in. e.g., United States, Germany, ...
+                countryISOCode -> country the location is within as a ISO code. e.g., US, DE, UK, ...
+    sunsetTimeFormatted -> formatted sunset time. e.g., 17:08 PM
+    sunriseTimeFormatted -> formatted sunset time. e.g., 07:16 AM
+}
+
+Alarms (Added):
+var alarms = {
+    This object is an array of alarm entries, each with the following data:
+
+    title -> title of the alarm
+    body -> the text content of the alarm, either 'Alarm' (needs translating) or user-set in Clock app. 
+    nextFireDateTimestamp -> the next fire date of the alarm (either the first fire time, or next one after snoozing), as a UNIX timestamp
+    nextFireDateTimeParsed -> The above, but parsed to e.g., 10:14am
+    nextFireDateDayParsed -> The above, but parsed to e.g., Tuesday
+    allowSnooze -> whether this alarm allows snoozing
+    repeatingFromSnoozed -> whether this alarm is re-scheduled due to the user hitting snooze
+}
+
+Reminders (Added):
+var reminders {
+    This object is an array of reminder entries, each with the following data:
+    
+    title -> title of the reminder
+    dueDate -> formatted reminder fire date, e.g., 11/23/18, 23/11/18 (UK style), etc
+    dueDateTimestamp -> reminder fire date as a UNIX timestamp
+    priority -> the priority value of the reminder. Maps the to !/!!/!!! selector in the Reminders app
+}
+
+Events (Added):
+var events {
+    This object is an array of events entries from the user's enabled calendars in the Calendar app, each with the following data:
+    
+    title -> Title of the calendar entry
+    location -> User-set location of the calendar entry
+    isAllDay -> Whether the event is set to cover the entire day
+    date -> formatted calendar date, e.g., 11/23/18, 23/11/18 (UK style), etc
+    startTimeTimestamp -> start time of the calemdar event, as a UNIX timestamp
+    endTimeTimestamp -> end time of the calemdar event, as a UNIX timestamp
+    associatedCalendarName -> The title of the calendar this event is found on
+    associatedCalendarHexColor -> The in-app colour of the calendar this event is found on, as a hex code (includes the #)
+}
