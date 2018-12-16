@@ -47,6 +47,7 @@
         // Do an initial update
         dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5.0);
         dispatch_after(delay, dispatch_get_main_queue(), ^(void){
+            
             // Start location tracking in Weather.framework
             if ([self.weatherLocationManager respondsToSelector:@selector(setLocationTrackingReady:activelyTracking:watchKitExtension:)]) {
                 [self.weatherLocationManager setLocationTrackingReady:YES activelyTracking:NO watchKitExtension:NO];
@@ -75,7 +76,6 @@
     self.deviceIsAsleep = YES;
     
     // Stopping timer. If it fires when off, well, likely nothing happens due to be being in deep sleep
-    NSLog(@"*** [XenInfo] :: DEBUG :: Stopping weather update timer due to sleep");
     [self.updateTimer invalidate];
 }
 
@@ -88,11 +88,9 @@
         NSTimeInterval nextFireInterval = [self.nextUpdateTime timeIntervalSinceDate:[NSDate date]];
         
         if (nextFireInterval <= 5) { // seconds
-            NSLog(@"*** [XenInfo] :: DEBUG :: Timer would have (or is about to) expire, so requesting signing checks");
             [self requestRefresh];
         } else {
             // Restart the timer for this remaining interval
-            NSLog(@"*** [XenInfo] :: DEBUG :: Restarting signing timer due to wake, with interval: %f minutes", (float)nextFireInterval / 60.0);
             [self _restartTimerWithInterval:nextFireInterval];
         }
     }
@@ -132,8 +130,6 @@
 - (void)_restartTimerWithInterval:(NSTimeInterval)interval {
     if (self.updateTimer)
         [self.updateTimer invalidate];
-    
-    NSLog(@"*** [XenInfo] :: Restarting weather update timer with interval: %f minutes", (float)interval / 60.0);
     
     self.updateTimer = [NSTimer scheduledTimerWithTimeInterval:interval
                                                         target:self
@@ -183,12 +179,11 @@
 
 - (void)_refreshWeatherWithLocation:(CLLocation*)location {
     // Set update delegate
-    if ([self.currentCity respondsToSelector:@selector(associateWithDelegate:)])
+    if ([self.currentCity respondsToSelector:@selector(associateWithDelegate:)]) {
         [self.currentCity associateWithDelegate:self];
-    else if ([self.currentCity respondsToSelector:@selector(addUpdateObserver:)])
+    } else if ([self.currentCity respondsToSelector:@selector(addUpdateObserver:)]) {
         [self.currentCity addUpdateObserver:self];
-    
-    NSLog(@"*** [XenInfo] :: Updating weather...");
+    }
     
     TWCLocationUpdater *locationUpdater = [objc_getClass("TWCLocationUpdater") sharedLocationUpdater];
     [locationUpdater updateWeatherForLocation:location city:self.currentCity];
@@ -201,7 +196,6 @@
         CLLocation *newestLocation = [locations lastObject];
         
         // Get an update for this change!
-        NSLog(@"*** [XenInfo] :: DEBUG :: Updating weather for new location!");
         [self _refreshWeatherWithLocation:newestLocation];
     }
 }
@@ -215,8 +209,7 @@
 -(void)cityDidFinishWeatherUpdate:(City*)city {
     // New data, so update!
     self.currentCity = city;
-    
-    NSLog(@"*** [XenInfo] :: DEBUG :: Got new city!");
+
     [self.delegate didUpdateCity:city];
 }
 
