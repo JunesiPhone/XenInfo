@@ -9,6 +9,7 @@
 #import "XIWeather.h"
 #import "XIWeatherHeaders.h"
 #import "../Internal/XIWidgetManager.h"
+
 #import <objc/runtime.h>
 #import <substrate.h>
 
@@ -30,6 +31,7 @@
 @interface XIWeather ()
 @property (nonatomic, strong) WeatherLocationManager* weatherLocationManager;
 @property (nonatomic, strong) City *currentCity;
+@property (nonatomic, strong) NSDictionary *reverseGeocodedAddress;
 
 @property (nonatomic, strong) NSDateFormatter *cachedFormatter;
 @property (nonatomic, strong) NSTimer *updateTimer;
@@ -97,6 +99,7 @@
     if (!self.currentCity) {
         NSDictionary *weatherInfo = @{
                                       @"city": @"No Weather",
+                                      @"address": @{},
                                       @"temperature": @0,
                                       @"low": @0,
                                       @"high": @0,
@@ -187,6 +190,7 @@
     
     NSDictionary *weatherInfo = @{
                                   @"city": self.currentCity.name != nil ? self.currentCity.name : @"Local Weather",
+                                  @"address": self.reverseGeocodedAddress ? self.reverseGeocodedAddress : @{},
                                   @"temperature": [NSNumber numberWithInt:temp],
                                   @"low": dailyForecasts.count > 0 ? [dailyForecasts[0] objectForKey:@"low"] : @0,
                                   @"high": dailyForecasts.count > 0 ? [dailyForecasts[0] objectForKey:@"high"] : @0,
@@ -266,7 +270,7 @@
         self.cachedFormatter = [NSDateFormatter new];
         
         // Init appropriate weather updater for iOS version.
-        if (objc_getClass("WATodayModel")) { // Should cover iOS 10 and 11
+        if ([UIDevice currentDevice].systemVersion.floatValue >= 10.0) {
             self.waWeather = [[XIWAWeather alloc] init];
             self.waWeather.delegate = self;
             self.currentCity  = self.waWeather.currentCity; // Initial setting of city
@@ -280,10 +284,33 @@
     return self;
 }
 
-- (void)didUpdateCity:(id)city {
+- (void)didUpdateCity:(City*)city {
     // City did update, this is now the current city.
     self.currentCity = city;
-    [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIWeather topic]];
+    
+    // Do a reverse geocoding request for this city
+    CLGeocoder *geocoder = [CLGeocoder new];
+    [geocoder reverseGeocodeLocation:city.location completionHandler:^(NSArray *placemarks, NSError *error) {
+        if (error || placemarks.count == 0) {
+            // TODO: Handle geocode error!
+        } else {
+            CLPlacemark *placemark = [placemarks objectAtIndex:0];
+            self.reverseGeocodedAddress = @{
+                                            @"street": [NSString stringWithFormat:@"%@ %@", placemark.subThoroughfare ? placemark.subThoroughfare : @"", placemark.thoroughfare],
+                                            @"neighbourhood": placemark.subLocality,
+                                            @"city": placemark.locality,
+                                            @"zipCode": placemark.postalCode,
+                                            @"county": placemark.subAdministrativeArea,
+                                            @"state": placemark.administrativeArea,
+                                            @"country": placemark.country,
+                                            @"countryISOCode": placemark.ISOcountryCode
+                                            };
+            
+            Xlog(@"Got new geocoded address: %@", self.reverseGeocodedAddress);
+        }
+        
+        [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIWeather topic]];
+    }];
 }
 
 - (int)_convertTemperature:(id)temperature {
