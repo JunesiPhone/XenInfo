@@ -207,8 +207,10 @@
                                   @"windDirection": [NSNumber numberWithInt:(int)roundf(self.currentCity.windDirection)],
                                   @"windSpeed": [NSNumber numberWithInt:(int)roundf(self.currentCity.windSpeed)],
                                   @"visibility": [NSNumber numberWithInt:(int)roundf(self.currentCity.visibility)],
-                                  @"sunsetTime": [self _intTimeToString:self.currentCity.sunsetTime],
-                                  @"sunriseTime": [self _intTimeToString:self.currentCity.sunriseTime],
+                                  @"sunsetTime": [NSString stringWithFormat:@"%llu",self.currentCity.sunsetTime],
+                                  @"sunriseTime": [NSString stringWithFormat:@"%llu",self.currentCity.sunriseTime],
+                                  @"sunsetTimeFormatted":[self _intTimeToString:self.currentCity.sunsetTime],
+                                  @"sunriseTimeFormatted": [self _intTimeToString:self.currentCity.sunriseTime],
                                   @"precipitationForecast": [NSNumber numberWithInt:self.currentCity.precipitationForecast],
                                   @"pressure": [NSNumber numberWithInt:(int)roundf(self.currentCity.pressure)],
                                   @"precipitation24hr": [NSNumber numberWithFloat:self.currentCity.precipitationPast24Hours],
@@ -324,7 +326,9 @@
     }
     
     NSString *string = @"";
-    if (input < 100) {
+    if (input < 10) {
+        string = [NSString stringWithFormat:@"000%d", input];
+    } else if (input < 100) {
         string = [NSString stringWithFormat:@"00%d", input];
     } else if (input < 1000) {
         string = [NSString stringWithFormat:@"0%d", input];
