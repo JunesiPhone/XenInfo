@@ -139,7 +139,12 @@
     }
     
     int temp = [self _convertTemperature:self.currentCity.temperature];
-    int feelslike = [self _convertTemperature:self.currentCity.feelsLike];
+    int feelslike = 0;
+    
+    if ([UIDevice currentDevice].systemVersion.floatValue >= 10.0)
+        feelslike = [self _convertTemperature:self.currentCity.feelsLike];
+    else
+        feelslike = [self _convertToFarenheitIfNeeded:(int)self.currentCity.feelsLike]; // iOS 9 is a float for this
     
     // Grabs translated condition string
     NSString *conditionString = [self _conditionNameFromCode:self.currentCity.conditionCode];
@@ -296,14 +301,14 @@
         } else {
             CLPlacemark *placemark = [placemarks objectAtIndex:0];
             self.reverseGeocodedAddress = @{
-                                            @"street": [NSString stringWithFormat:@"%@ %@", placemark.subThoroughfare ? placemark.subThoroughfare : @"", placemark.thoroughfare],
-                                            @"neighbourhood": placemark.subLocality,
-                                            @"city": placemark.locality,
-                                            @"zipCode": placemark.postalCode,
-                                            @"county": placemark.subAdministrativeArea,
-                                            @"state": placemark.administrativeArea,
-                                            @"country": placemark.country,
-                                            @"countryISOCode": placemark.ISOcountryCode
+                                            @"street": [NSString stringWithFormat:@"%@ %@", placemark.subThoroughfare ? placemark.subThoroughfare : @"", placemark.thoroughfare ? placemark.thoroughfare : @""],
+                                            @"neighbourhood": placemark.subLocality ? placemark.subLocality : @"",
+                                            @"city": placemark.locality ? placemark.locality : @"",
+                                            @"postalCode": placemark.postalCode ? placemark.postalCode : @"",
+                                            @"county": placemark.subAdministrativeArea ? placemark.subAdministrativeArea : @"",
+                                            @"state": placemark.administrativeArea ? placemark.administrativeArea : @"",
+                                            @"country": placemark.country ? placemark.country : @"",
+                                            @"countryISOCode": placemark.ISOcountryCode ? placemark.ISOcountryCode : @""
                                             };
             
             Xlog(@"Got new geocoded address: %@", self.reverseGeocodedAddress);
@@ -319,14 +324,16 @@
         WFTemperature *temp = (WFTemperature*)temperature;
         return [[objc_getClass("WeatherPreferences") sharedPreferences] isCelsius] ? (int)temp.celsius : (int)temp.fahrenheit;
     } else {
-        int temp = [temperature intValue];
-        
-        // Need to convert to Farenheit ourselves annoyingly
-        if (![[objc_getClass("WeatherPreferences") sharedPreferences] isCelsius])
-            temp = ((temp*9)/5) + 32;
-        
-        return temp;
+        return [self _convertToFarenheitIfNeeded:[temperature intValue]];
     }
+}
+
+- (int)_convertToFarenheitIfNeeded:(int)temp {
+    // Need to convert to Farenheit ourselves annoyingly
+    if (![[objc_getClass("WeatherPreferences") sharedPreferences] isCelsius])
+        temp = ((temp*9)/5) + 32;
+    
+    return temp;
 }
 
 - (BOOL)_isDeviceIn24Time {
