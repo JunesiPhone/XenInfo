@@ -7,6 +7,8 @@
 #import <WebKit/WebKit.h>
 #import <objc/runtime.h>
 
+#include <dlfcn.h>
+
 @class WebView;
 @class WebScriptObject;
 
@@ -490,6 +492,9 @@ static MPUNowPlayingController *globalMPUNowPlaying;
 
 %ctor {
     Xlog(@"Injecting...");
+    
+    // Load Weather.framework if needed
+    dlopen("/System/Library/PrivateFrameworks/Weather.framework/Weather", RTLD_NOW);
     
     %init;
 }
