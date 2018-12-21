@@ -303,8 +303,20 @@
             // TODO: Handle geocode error!
         } else {
             CLPlacemark *placemark = [placemarks objectAtIndex:0];
+            
+            NSString *streetComponent = @"";
+            if (placemark.subThoroughfare != nil && placemark.thoroughfare != nil) {
+                streetComponent = [NSString stringWithFormat:@"%@ %@", placemark.subThoroughfare, placemark.thoroughfare];
+            } else if (placemark.thoroughfare != nil) {
+                streetComponent = [NSString stringWithFormat:@"%@", placemark.thoroughfare];
+            } else if (placemark.subLocality != nil) { // handle no street address somewhat
+                streetComponent = [NSString stringWithFormat:@"%@", placemark.subLocality];
+            } else { // fallback
+                streetComponent = @"Unknown street";
+            }
+            
             self.reverseGeocodedAddress = @{
-                                            @"street": [NSString stringWithFormat:@"%@ %@", placemark.subThoroughfare ? placemark.subThoroughfare : @"", placemark.thoroughfare ? placemark.thoroughfare : @""],
+                                            @"street": streetComponent,
                                             @"neighbourhood": placemark.subLocality ? placemark.subLocality : @"",
                                             @"city": placemark.locality ? placemark.locality : @"",
                                             @"postalCode": placemark.postalCode ? placemark.postalCode : @"",
