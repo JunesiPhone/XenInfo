@@ -244,17 +244,17 @@
 
 -(void)todayModel:(WATodayModel*)todayModel forecastWasUpdated:(WAForecastModel*)forecastModel {
     // Stop timeout if needed
-    [self.locationTrackingTimeoutTimer invalidate];
+    //[self.locationTrackingTimeoutTimer invalidate];
     
-    // Handle this update
+    // Handle this update - not stopping the timeout
     [self.delegate didUpdateCity:forecastModel.city];
     
     // Start location tracking timeout
-    self.locationTrackingTimeoutTimer = [NSTimer scheduledTimerWithTimeInterval:LOCATION_TIMEOUT_INTERVAL
+    /*self.locationTrackingTimeoutTimer = [NSTimer scheduledTimerWithTimeInterval:LOCATION_TIMEOUT_INTERVAL
                                                                          target:self
                                                                        selector:@selector(_locationTrackingTimeoutFired:)
                                                                        userInfo:nil
-                                                                        repeats:NO];
+                                                                        repeats:NO];*/
 }
 
 - (BOOL)_date:(NSDate*)newDate isNewerThanDate:(NSDate*)oldDate {
