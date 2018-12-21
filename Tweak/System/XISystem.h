@@ -15,8 +15,10 @@
 @property (nonatomic, weak) id<XIWidgetManagerDelegate> delegate;
 
 // Each is called as an action from XIWidgetManager.
--(void)openApplicationWithBundleIdentifier:(NSString *)bundleIdentifier;
--(void)openURL:(NSString *)path;
+- (void)openApplicationWithBundleIdentifier:(NSString *)bundleIdentifier;
+- (void)openURL:(NSString *)path;
+- (void)openSpotlight;
+- (void)logMessage:(NSString*)message;
 
 // Cached variables between refreshes.
 @property (nonatomic, strong) NSString *cachedSystemVersion;

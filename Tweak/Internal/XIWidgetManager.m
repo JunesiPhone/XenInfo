@@ -210,8 +210,19 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
         XISystem *systemProvider = [self.widgetDataProviders objectForKey:[XISystem topic]];
         [systemProvider openURL:parameter];
         
+    } else if ([action isEqualToString:@"openspotlight"]) {
+        
+        // Handle in System provider
+        XISystem *systemProvider = [self.widgetDataProviders objectForKey:[XISystem topic]];
+        [systemProvider openSpotlight];
+        
+    } else if ([action isEqualToString:@"consolelog"]) {
+        
+        // Handle in System provider
+        XISystem *systemProvider = [self.widgetDataProviders objectForKey:[XISystem topic]];
+        [systemProvider logMessage:parameter];
+        
     }
-    
     
 }
 

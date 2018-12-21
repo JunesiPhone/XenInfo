@@ -28,6 +28,7 @@
 		C97DAFF3218E45D200217363 /* XITWCWeather.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XITWCWeather.h; sourceTree = "<group>"; };
 		C97DAFF4218E45D200217363 /* XITWCWeather.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XITWCWeather.m; sourceTree = "<group>"; };
 		C97DAFF5218E53EC00217363 /* XIWeather-Protocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "XIWeather-Protocol.h"; sourceTree = "<group>"; };
+		C9B790A421CD67B9004C7682 /* XISystemHeaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XISystemHeaders.h; sourceTree = "<group>"; };
 		C9E16FCF20C08F5B00BA0031 /* XIInfoStats.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIInfoStats.h; sourceTree = "<group>"; };
 		C9E16FD020C08F5C00BA0031 /* XIInfoStats.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XIInfoStats.m; sourceTree = "<group>"; };
 		C9E16FD120C0935A00BA0031 /* XIInfoStatsHeaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XIInfoStatsHeaders.h; sourceTree = "<group>"; };
@@ -120,6 +121,7 @@
 			children = (
 				C978F95E20C05B93005C20B8 /* XISystem.h */,
 				C978F95F20C05B93005C20B8 /* XISystem.m */,
+				C9B790A421CD67B9004C7682 /* XISystemHeaders.h */,
 			);
 			path = System;
 			sourceTree = "<group>";
