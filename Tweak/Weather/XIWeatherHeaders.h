@@ -11,6 +11,18 @@
 
 #import <CoreLocation/CoreLocation.h>
 
+@interface CLPlacemark (Private)
+  @property (nonatomic, readonly, copy) NSString *subThoroughfare;
+  @property (nonatomic, readonly, copy) NSString *thoroughfare;
+  @property (nonatomic, readonly, copy) NSString *subLocality;
+  @property (nonatomic, readonly, copy) NSString *locality;
+  @property (nonatomic, readonly, copy) NSString *postalCode;
+  @property (nonatomic, readonly, copy) NSString *subAdministrativeArea;
+  @property (nonatomic, readonly, copy) NSString *administrativeArea;
+  @property (nonatomic, readonly, copy) NSString *country;
+  @property (nonatomic, readonly, copy) NSString *ISOcountryCode;
+@end
+
 @interface CLLocationManager (Private)
 + (int)authorizationStatusForBundleIdentifier:(id)arg1;
 @end
