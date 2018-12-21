@@ -9,6 +9,7 @@
 #import "XIWeather.h"
 #import "XIWeatherHeaders.h"
 #import "../Internal/XIWidgetManager.h"
+
 #import <objc/runtime.h>
 #import <substrate.h>
 
@@ -30,6 +31,7 @@
 @interface XIWeather ()
 @property (nonatomic, strong) WeatherLocationManager* weatherLocationManager;
 @property (nonatomic, strong) City *currentCity;
+@property (nonatomic, strong) NSDictionary *reverseGeocodedAddress;
 
 @property (nonatomic, strong) NSDateFormatter *cachedFormatter;
 @property (nonatomic, strong) NSTimer *updateTimer;
@@ -97,6 +99,7 @@
     if (!self.currentCity) {
         NSDictionary *weatherInfo = @{
                                       @"city": @"No Weather",
+                                      @"address": @{},
                                       @"temperature": @0,
                                       @"low": @0,
                                       @"high": @0,
@@ -136,7 +139,15 @@
     }
     
     int temp = [self _convertTemperature:self.currentCity.temperature];
-    int feelslike = [self _convertTemperature:self.currentCity.feelsLike];
+    int feelslike = 0;
+    
+    if ([UIDevice currentDevice].systemVersion.floatValue >= 10.0) {
+        feelslike = [self _convertTemperature:self.currentCity.feelsLike];
+    } else if ([self.currentCity.feelsLike isKindOfClass:objc_getClass("City")]) { // workaround an odd iOS 9.3-ism.
+        feelslike = [self _convertTemperature:[self.currentCity valueForKey:@"feelsLike"]];
+    } else {
+        feelslike = [self _convertToFarenheitIfNeeded:(int)self.currentCity.feelsLike]; // iOS 9 has a float for this
+    }
     
     // Grabs translated condition string
     NSString *conditionString = [self _conditionNameFromCode:self.currentCity.conditionCode];
@@ -187,6 +198,7 @@
     
     NSDictionary *weatherInfo = @{
                                   @"city": self.currentCity.name != nil ? self.currentCity.name : @"Local Weather",
+                                  @"address": self.reverseGeocodedAddress ? self.reverseGeocodedAddress : @{},
                                   @"temperature": [NSNumber numberWithInt:temp],
                                   @"low": dailyForecasts.count > 0 ? [dailyForecasts[0] objectForKey:@"low"] : @0,
                                   @"high": dailyForecasts.count > 0 ? [dailyForecasts[0] objectForKey:@"high"] : @0,
@@ -207,8 +219,10 @@
                                   @"windDirection": [NSNumber numberWithInt:(int)roundf(self.currentCity.windDirection)],
                                   @"windSpeed": [NSNumber numberWithInt:(int)roundf(self.currentCity.windSpeed)],
                                   @"visibility": [NSNumber numberWithInt:(int)roundf(self.currentCity.visibility)],
-                                  @"sunsetTime": [self _intTimeToString:self.currentCity.sunsetTime],
-                                  @"sunriseTime": [self _intTimeToString:self.currentCity.sunriseTime],
+                                  @"sunsetTime": [NSString stringWithFormat:@"%llu",self.currentCity.sunsetTime],
+                                  @"sunriseTime": [NSString stringWithFormat:@"%llu",self.currentCity.sunriseTime],
+                                  @"sunsetTimeFormatted":[self _intTimeToString:self.currentCity.sunsetTime],
+                                  @"sunriseTimeFormatted": [self _intTimeToString:self.currentCity.sunriseTime],
                                   @"precipitationForecast": [NSNumber numberWithInt:self.currentCity.precipitationForecast],
                                   @"pressure": [NSNumber numberWithInt:(int)roundf(self.currentCity.pressure)],
                                   @"precipitation24hr": [NSNumber numberWithFloat:self.currentCity.precipitationPast24Hours],
@@ -264,7 +278,7 @@
         self.cachedFormatter = [NSDateFormatter new];
         
         // Init appropriate weather updater for iOS version.
-        if (objc_getClass("WATodayModel")) { // Should cover iOS 10 and 11
+        if ([UIDevice currentDevice].systemVersion.floatValue >= 10.0) {
             self.waWeather = [[XIWAWeather alloc] init];
             self.waWeather.delegate = self;
             self.currentCity  = self.waWeather.currentCity; // Initial setting of city
@@ -278,10 +292,45 @@
     return self;
 }
 
-- (void)didUpdateCity:(id)city {
+- (void)didUpdateCity:(City*)city {
     // City did update, this is now the current city.
     self.currentCity = city;
-    [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIWeather topic]];
+    
+    // Do a reverse geocoding request for this city
+    CLGeocoder *geocoder = [CLGeocoder new];
+    [geocoder reverseGeocodeLocation:city.location completionHandler:^(NSArray *placemarks, NSError *error) {
+        if (error || placemarks.count == 0) {
+            // TODO: Handle geocode error!
+        } else {
+            CLPlacemark *placemark = [placemarks objectAtIndex:0];
+            
+            NSString *streetComponent = @"";
+            if (placemark.subThoroughfare != nil && placemark.thoroughfare != nil) {
+                streetComponent = [NSString stringWithFormat:@"%@ %@", placemark.subThoroughfare, placemark.thoroughfare];
+            } else if (placemark.thoroughfare != nil) {
+                streetComponent = [NSString stringWithFormat:@"%@", placemark.thoroughfare];
+            } else if (placemark.subLocality != nil) { // handle no street address somewhat
+                streetComponent = [NSString stringWithFormat:@"%@", placemark.subLocality];
+            } else { // fallback
+                streetComponent = @"Unknown street";
+            }
+            
+            self.reverseGeocodedAddress = @{
+                                            @"street": streetComponent,
+                                            @"neighbourhood": placemark.subLocality ? placemark.subLocality : @"",
+                                            @"city": placemark.locality ? placemark.locality : @"",
+                                            @"postalCode": placemark.postalCode ? placemark.postalCode : @"",
+                                            @"county": placemark.subAdministrativeArea ? placemark.subAdministrativeArea : @"",
+                                            @"state": placemark.administrativeArea ? placemark.administrativeArea : @"",
+                                            @"country": placemark.country ? placemark.country : @"",
+                                            @"countryISOCode": placemark.ISOcountryCode ? placemark.ISOcountryCode : @""
+                                            };
+            
+            Xlog(@"Got new geocoded address: %@", self.reverseGeocodedAddress);
+        }
+        
+        [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIWeather topic]];
+    }];
 }
 
 - (int)_convertTemperature:(id)temperature {
@@ -290,14 +339,16 @@
         WFTemperature *temp = (WFTemperature*)temperature;
         return [[objc_getClass("WeatherPreferences") sharedPreferences] isCelsius] ? (int)temp.celsius : (int)temp.fahrenheit;
     } else {
-        int temp = [temperature intValue];
-        
-        // Need to convert to Farenheit ourselves annoyingly
-        if (![[objc_getClass("WeatherPreferences") sharedPreferences] isCelsius])
-            temp = ((temp*9)/5) + 32;
-        
-        return temp;
+        return [self _convertToFarenheitIfNeeded:[temperature intValue]];
     }
+}
+
+- (int)_convertToFarenheitIfNeeded:(int)temp {
+    // Need to convert to Farenheit ourselves annoyingly
+    if (![[objc_getClass("WeatherPreferences") sharedPreferences] isCelsius])
+        temp = ((temp*9)/5) + 32;
+    
+    return temp;
 }
 
 - (BOOL)_isDeviceIn24Time {
@@ -324,7 +375,9 @@
     }
     
     NSString *string = @"";
-    if (input < 100) {
+    if (input < 10) {
+        string = [NSString stringWithFormat:@"000%d", input];
+    } else if (input < 100) {
         string = [NSString stringWithFormat:@"00%d", input];
     } else if (input < 1000) {
         string = [NSString stringWithFormat:@"0%d", input];

@@ -7,9 +7,12 @@
 //
 
 #import "XISystem.h"
+#import "XISystemHeaders.h"
 
 #import <UIKit/UIKit.h>
 #import <sys/utsname.h> //device models
+
+#import <objc/runtime.h>
 
 @interface SpringBoard : UIApplication
 - (void)launchApplicationWithIdentifier:(NSString*)identifier suspended:(BOOL)suspended;
@@ -87,6 +90,18 @@
         }
     }
 #pragma clang diagnostic pop
+}
+
+- (void)openSpotlight {
+    if ([UIDevice currentDevice].systemVersion.floatValue >= 11.0) {
+        [[[objc_getClass("SBIconController") sharedInstance] searchGesture] revealAnimated:YES];
+    } else {
+        [[objc_getClass("SBSearchGesture") sharedInstance] revealAnimated:YES];
+    }
+}
+
+- (void)logMessage:(NSString*)message {
+    NSLog(@"*** XenInfo :: WIDGET :: %@", message);
 }
 
 #pragma mark Provider specific methods

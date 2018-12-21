@@ -102,7 +102,7 @@
 
 - (void)advanceTrack {
     SBMediaController *mediaController = [objc_getClass("SBMediaController") sharedInstance];
-    if ([mediaController respondsToSelector:@selector(changeTrack)])
+    if ([mediaController respondsToSelector:@selector(changeTrack:)])
         [mediaController changeTrack:1];
     else if ([mediaController respondsToSelector:@selector(changeTrack:eventSource:)])
         [mediaController changeTrack:1 eventSource:1];
@@ -110,7 +110,7 @@
 
 - (void)retreatTrack {
     SBMediaController *mediaController = [objc_getClass("SBMediaController") sharedInstance];
-    if ([mediaController respondsToSelector:@selector(changeTrack)])
+    if ([mediaController respondsToSelector:@selector(changeTrack:)])
         [mediaController changeTrack:-1];
     else if ([mediaController respondsToSelector:@selector(changeTrack:eventSource:)])
         [mediaController changeTrack:-1 eventSource:1];

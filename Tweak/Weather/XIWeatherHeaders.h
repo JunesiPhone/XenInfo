@@ -22,12 +22,12 @@
 - (id)loadSavedCities;
 - (id)loadSavedCityAtIndex:(int)index;
 - (void)setLocalWeatherEnabled:(BOOL)enabled;
+- (id)cityFromPreferencesDictionary:(id)arg1;
 @end
 
 @interface TWCLocationUpdater : NSObject
 + (instancetype)sharedLocationUpdater;
-- (void)_updateWeatherForLocation:(id)arg1 city:(id)arg2 completionHandler:(id)arg3;
-- (void)updateWeatherForLocation:(id)arg1 city:(id)arg2 withCompletionHandler:(id)arg3;
+- (void)updateWeatherForLocation:(id)arg1 city:(id)arg2;
 @end
 
 @interface WFTemperature : NSObject
@@ -97,6 +97,9 @@
 - (id)cityAndState;
 - (id)temperature;
 - (id)updateTime;
+
+- (void)associateWithDelegate:(id)delegate;
+- (void)addUpdateObserver:(id)delegate;
 @end
 
 @interface DayForecast : NSObject

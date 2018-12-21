@@ -22,7 +22,7 @@
  * 1. Enable location services for the model
  * 2. Wait a couple of seconds to get a new location fix if needed
  * 3. Get new data
- * 4. Start a timeout for locaiton services to improve its fix
+ * 4. Start a timeout for location services to improve its fix
  *    This is reset if new updates are notified by the model in -todayModel:forecastWasUpdated:
  * 5. On timeout firing, a new data request is made
  * 6. Location services is disabled for the model
@@ -46,8 +46,9 @@
 @property (nonatomic, retain) NSTimer *updateTimer;
 @property (nonatomic, retain) NSTimer *locationTrackingTimeoutTimer;
 @property (nonatomic, retain) NSDate *lastUpdateTime;
+@property (nonatomic, retain) NSDate *nextUpdateTime;
 @property (nonatomic, readwrite) BOOL deviceIsAsleep;
-@property (nonatomic, readwrite) BOOL refreshQueuedDuringDeviceSleep;
+//@property (nonatomic, readwrite) BOOL refreshQueuedDuringDeviceSleep;
 @property (nonatomic, readwrite) BOOL networkIsDisconnected;
 @property (nonatomic, readwrite) BOOL refreshQueuedDuringNetworkDisconnected;
 
@@ -60,16 +61,12 @@
     
     if (self) {
         Xlog(@"Init XIWAWeather");
-        self.updateTimer = [NSTimer scheduledTimerWithTimeInterval:UPDATE_INTERVAL * 60
-                                                            target:self
-                                                          selector:@selector(_updateTimerFired:)
-                                                          userInfo:nil
-                                                           repeats:YES];
-        
+
         // Set default values
         _ignoreUpdateFlag = NO;
         self.lastUpdateTime = nil;
         
+        [self _restartTimerWithInterval:UPDATE_INTERVAL * 60];
         [self _setupTodayModels];
     }
     
@@ -78,16 +75,28 @@
 
 - (void)noteDeviceDidEnterSleep {
     self.deviceIsAsleep = YES;
+    
+    // Stopping timer. If it fires when off, well, likely nothing happens due to be being in deep sleep
+    NSLog(@"*** [XenInfo] :: DEBUG :: Stopping weather update timer due to sleep");
+    [self.updateTimer invalidate];
 }
 
 // Called on the reverse
 - (void)noteDeviceDidExitSleep {
     self.deviceIsAsleep = NO;
     
-    // Undertake a refresh if one was queued during sleep.
-    if (self.refreshQueuedDuringDeviceSleep) {
-        [self requestRefresh];
-        self.refreshQueuedDuringDeviceSleep = NO;
+    // Restarting timer as needed.
+    {
+        NSTimeInterval nextFireInterval = [self.nextUpdateTime timeIntervalSinceDate:[NSDate date]];
+        
+        if (nextFireInterval <= 5) { // seconds
+            NSLog(@"*** [XenInfo] :: DEBUG :: Timer would have (or is about to) expire, so requesting signing checks");
+            [self requestRefresh];
+        } else {
+            // Restart the timer for this remaining interval
+            NSLog(@"*** [XenInfo] :: DEBUG :: Restarting signing timer due to wake, with interval: %f minutes", (float)nextFireInterval / 60.0);
+            [self _restartTimerWithInterval:nextFireInterval];
+        }
     }
 }
 
@@ -107,10 +116,10 @@
 
 - (void)requestRefresh {
     // Queue if asleep
-    if (self.deviceIsAsleep) {
+    /*if (self.deviceIsAsleep) {
         self.refreshQueuedDuringDeviceSleep = YES;
         return;
-    }
+    }*/
     
     // Queue if no network
     if (self.networkIsDisconnected) {
@@ -120,6 +129,24 @@
     
     // Otherwise, update now!
     [self _updateModel:self.todayModel];
+    
+    // And restart the update timer with the full interval
+    [self _restartTimerWithInterval:UPDATE_INTERVAL * 60];
+}
+
+- (void)_restartTimerWithInterval:(NSTimeInterval)interval {
+    if (self.updateTimer)
+        [self.updateTimer invalidate];
+    
+    NSLog(@"*** [XenInfo] :: Restarting weather update timer with interval: %f minutes", (float)interval / 60.0);
+    
+    self.updateTimer = [NSTimer scheduledTimerWithTimeInterval:interval
+                                                        target:self
+                                                      selector:@selector(_updateTimerFired:)
+                                                      userInfo:nil
+                                                       repeats:NO];
+    
+    self.nextUpdateTime = [[NSDate date] dateByAddingTimeInterval:interval];
 }
 
 - (void)_setupTodayModels {
@@ -190,17 +217,17 @@
                 
                 // Update last updated time
                 self.lastUpdateTime = todayModel.forecastModel.city.updateTime;
-            
-                // Start location tracking timeout - in the event of location being improved.
-                // Improvements will be reported to todayModel:forecastWasUpdated:
-                [self.locationTrackingTimeoutTimer invalidate];
-                self.locationTrackingTimeoutTimer = [NSTimer scheduledTimerWithTimeInterval:LOCATION_TIMEOUT_INTERVAL
-                                                             target:self
-                                                           selector:@selector(_locationTrackingTimeoutFired:)
-                                                           userInfo:nil
-                                                            repeats:NO];
             }
         }];
+        
+        // Start location tracking timeout - in the event of location being improved.
+        // Improvements will be reported to todayModel:forecastWasUpdated:
+        [self.locationTrackingTimeoutTimer invalidate];
+        self.locationTrackingTimeoutTimer = [NSTimer scheduledTimerWithTimeInterval:LOCATION_TIMEOUT_INTERVAL
+                                                                             target:self
+                                                                           selector:@selector(_locationTrackingTimeoutFired:)
+                                                                           userInfo:nil
+                                                                            repeats:NO];
     });
 }
 
@@ -217,17 +244,17 @@
 
 -(void)todayModel:(WATodayModel*)todayModel forecastWasUpdated:(WAForecastModel*)forecastModel {
     // Stop timeout if needed
-    [self.locationTrackingTimeoutTimer invalidate];
+    //[self.locationTrackingTimeoutTimer invalidate];
     
-    // Handle this update
+    // Handle this update - not stopping the timeout
     [self.delegate didUpdateCity:forecastModel.city];
     
     // Start location tracking timeout
-    self.locationTrackingTimeoutTimer = [NSTimer scheduledTimerWithTimeInterval:LOCATION_TIMEOUT_INTERVAL
+    /*self.locationTrackingTimeoutTimer = [NSTimer scheduledTimerWithTimeInterval:LOCATION_TIMEOUT_INTERVAL
                                                                          target:self
                                                                        selector:@selector(_locationTrackingTimeoutFired:)
                                                                        userInfo:nil
-                                                                        repeats:NO];
+                                                                        repeats:NO];*/
 }
 
 - (BOOL)_date:(NSDate*)newDate isNewerThanDate:(NSDate*)oldDate {
