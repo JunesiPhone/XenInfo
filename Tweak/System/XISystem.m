@@ -221,7 +221,7 @@
     NSString *formatStringForHours = [NSDateFormatter dateFormatFromTemplate:@"j" options:0 locale:[NSLocale currentLocale]];
     NSRange containsA = [formatStringForHours rangeOfString:@"a"];
     
-    return containsA.location != NSNotFound;
+    return containsA.location == NSNotFound;
 }
 
 @end
