@@ -278,7 +278,7 @@
         self.cachedFormatter = [NSDateFormatter new];
         
         // Init appropriate weather updater for iOS version.
-        if ([UIDevice currentDevice].systemVersion.floatValue >= 10.0) {
+        if ([UIDevice currentDevice].systemVersion.floatValue >= 10.2) {
             self.waWeather = [[XIWAWeather alloc] init];
             self.waWeather.delegate = self;
             self.currentCity  = self.waWeather.currentCity; // Initial setting of city
