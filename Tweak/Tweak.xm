@@ -32,6 +32,7 @@
 @property (nonatomic, copy) NSNumber *_xenhtml;
 @end
 
+
 ///////////////////////////////////////////////////////////////
 #pragma mark Internal Hooks
 ///////////////////////////////////////////////////////////////
@@ -336,18 +337,27 @@ static MPUNowPlayingController *globalMPUNowPlaying;
 
 %hook SBMediaController
 
+/* 
+    Note: Delay needed othewise info isn't correct
+    Example: If you press pause it will still say isPlaying.
+*/
+
 - (void)_nowPlayingInfoChanged{
     %orig;
-    
-    // Forward message that new data is available
-    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIMusic topic]];
+    dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.5);
+    dispatch_after(delay, dispatch_get_main_queue(), ^(void){
+        // Forward message that new data is available after delay
+        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIMusic topic]];
+    });
 }
 
 - (void)_mediaRemoteNowPlayingInfoDidChange:(id)arg1 {
     %orig;
-    
-    // Forward message that new data is available
-    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIMusic topic]];
+    dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.5);
+    dispatch_after(delay, dispatch_get_main_queue(), ^(void){
+        // Forward message that new data is available after delay
+        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIMusic topic]];
+    });
 }
 
 %end
