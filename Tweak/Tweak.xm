@@ -375,8 +375,8 @@ static MPUNowPlayingController *globalMPUNowPlaying;
 }
 
 %new
-+(id)_xeninfo_currentNowPlayingInfo {
-    return [globalMPUNowPlaying currentNowPlayingInfo];
++(id)_xeninfo_MPUNowPlayingController{
+    return globalMPUNowPlaying;
 }
 
 %new

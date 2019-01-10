@@ -5,6 +5,22 @@
 //  Created by Matt Clarke on 31/05/2018.
 //  Copyright © 2018 Matt Clarke. All rights reserved.
 //
+@interface MPUNowPlayingMetadata : NSObject 
+-(double)duration;
+-(NSString *)title;
+-(double)elapsedTime;
+-(BOOL)isMusicApp;
+-(NSString *)radioStationIdentifier;
+-(NSString *)artist;
+-(BOOL)isExplicitContent;
+-(float)playbackRate;
+-(NSDictionary *)nowPlayingInfo;
+-(NSString *)radioStationName;
+-(NSString *)album;
+-(unsigned long long)persistentID;
+-(BOOL)isAlwaysLive;
+-(id)initWithMediaRemoteNowPlayingInfo:(id)arg1 ;
+@end
 
 @interface MPUNowPlayingController : NSObject
 - (void)_updateCurrentNowPlaying;
@@ -23,7 +39,7 @@
 //added
 +(double)_xeninfo_elapsedTime;
 +(double)_xeninfo_currentDuration;
-+(id)_xeninfo_currentNowPlayingInfo;
++(id)_xeninfo_MPUNowPlayingController;
 +(id)_xeninfo_nowPlayingAppDisplayID;
 +(id)_xeninfo_albumArt;
 @end

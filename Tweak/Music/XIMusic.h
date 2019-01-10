@@ -18,11 +18,17 @@
 - (void)togglePlayState;
 - (void)advanceTrack;
 - (void)retreatTrack;
+- (void)toggleShuffle;
+- (void)toggleRepeat;
 
 // Cached variables between refreshes.
 @property (nonatomic, strong) NSString *cachedArtist;
 @property (nonatomic, strong) NSString *cachedAlbum;
 @property (nonatomic, strong) NSString *cachedTitle;
+@property (nonatomic, strong) NSString *cachedDuration;
+@property (nonatomic, strong) NSString *cachedElapsedTime;
 @property (nonatomic, readwrite) BOOL cachedIsPlaying;
+@property (nonatomic, strong) NSString *cachedShuffleEnabled;
+@property (nonatomic, strong) NSString *cachedRepeatEnabled;
 
 @end
