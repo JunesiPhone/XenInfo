@@ -109,27 +109,53 @@
         Make sure music is playing.
         Delay needed otherwise device will freeze (sometimes). Still looking into it.
     */
-    dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.5);
-    dispatch_after(delay, dispatch_get_main_queue(), ^(void){
-        if(self.cachedIsPlaying){
-            MPMusicPlayerController* controller = [MPMusicPlayerController systemMusicPlayer];
-
-            if([controller repeatMode] == MPMusicRepeatModeNone){
-                self.cachedRepeatEnabled = @"disabled";
-            }else{
-                self.cachedRepeatEnabled = @"enabled";
-            }
-
-            if([controller shuffleMode] == MPMusicShuffleModeOff){
-                self.cachedShuffleEnabled = @"disabled";
-            }else{
-                self.cachedShuffleEnabled = @"enabled";
-            }
-            
-            //update with new info
-            [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIMusic topic]];
+    if([UIDevice currentDevice].systemVersion.floatValue <= 10.2){
+        if([[info objectForKey:@"kMRMediaRemoteNowPlayingInfoShuffleMode"] intValue] == 1){
+            self.cachedShuffleEnabled = @"disabled";
+        }else{
+            self.cachedShuffleEnabled = @"enabled";
         }
-    });
+        if([[info objectForKey:@"kMRMediaRemoteNowPlayingInfoRepeatMode"] intValue] == 1){
+            self.cachedRepeatEnabled = @"disabled";
+        }else{
+            self.cachedRepeatEnabled = @"enabled";
+        }
+    }else if ([UIDevice currentDevice].systemVersion.floatValue > 10.2 && [UIDevice currentDevice].systemVersion.floatValue < 11.3){
+        dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 1.0);
+        dispatch_after(delay, dispatch_get_main_queue(), ^(void){ //needs to be on main thread
+            if(self.cachedIsPlaying){
+                MPMusicPlayerController* controller = [MPMusicPlayerController systemMusicPlayer];
+                if([controller repeatMode] == MPMusicRepeatModeNone){
+                    self.cachedRepeatEnabled = @"disabled";
+                }else{
+                    self.cachedRepeatEnabled = @"enabled";
+                }
+                if([controller shuffleMode] == MPMusicShuffleModeOff){
+                    self.cachedShuffleEnabled = @"disabled";
+                }else{
+                    self.cachedShuffleEnabled = @"enabled";
+                }
+                [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIMusic topic]];
+            }
+        });
+    }else if ([UIDevice currentDevice].systemVersion.floatValue >= 11.3){ //apparently fixed in 11.3
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if(self.cachedIsPlaying){
+                MPMusicPlayerController* controller = [MPMusicPlayerController systemMusicPlayer];
+                if([controller repeatMode] == MPMusicRepeatModeNone){
+                    self.cachedRepeatEnabled = @"disabled";
+                }else{
+                    self.cachedRepeatEnabled = @"enabled";
+                }
+                if([controller shuffleMode] == MPMusicShuffleModeOff){
+                    self.cachedShuffleEnabled = @"disabled";
+                }else{
+                    self.cachedShuffleEnabled = @"enabled";
+                }
+                [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIMusic topic]];
+            }
+        });
+    }
         
     // And then send the data through to the widgets
     [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIMusic topic]];
@@ -179,57 +205,64 @@
 
 -(void)toggleShuffle {
     if(self.cachedIsPlaying){
-        MPMusicPlayerController* controller = [MPMusicPlayerController systemMusicPlayer];
-        bool shuffleOn = NO;
-        switch([controller shuffleMode]){
-            case MPMusicShuffleModeDefault:
-                shuffleOn = YES;
-            break;
-            case MPMusicShuffleModeOff:
-                shuffleOn = NO;
-            break;
-            case MPMusicShuffleModeSongs:
-                shuffleOn = YES;
-            break;
-            case MPMusicShuffleModeAlbums:
-                shuffleOn = YES;
-            break;
-        }
+        /*
+            Apple: 
+                Must use a music player only on main thread
+        */
+        dispatch_async(dispatch_get_main_queue(), ^{
+            MPMusicPlayerController* controller = [MPMusicPlayerController systemMusicPlayer];
+            bool shuffleOn = NO;
+            switch([controller shuffleMode]){
+                case MPMusicShuffleModeDefault:
+                    shuffleOn = YES;
+                break;
+                case MPMusicShuffleModeOff:
+                    shuffleOn = NO;
+                break;
+                case MPMusicShuffleModeSongs:
+                    shuffleOn = YES;
+                break;
+                case MPMusicShuffleModeAlbums:
+                    shuffleOn = YES;
+                break;
+            }
 
-        //change shuffle mode
-        if(!shuffleOn){
-            [controller setShuffleMode: MPMusicShuffleModeSongs];
-        }else{
-            [controller setShuffleMode: MPMusicShuffleModeOff]; 
-        }
-
+            //change shuffle mode
+            if(!shuffleOn){
+                [controller setShuffleMode: MPMusicShuffleModeSongs];
+            }else{
+                [controller setShuffleMode: MPMusicShuffleModeOff]; 
+            }
+        });
     }   
 }
 -(void)toggleRepeat {
     if(self.cachedIsPlaying){
-        MPMusicPlayerController* controller = [MPMusicPlayerController systemMusicPlayer];
-        bool repeatOn = NO;
-        switch([controller repeatMode]){
-            case MPMusicRepeatModeDefault:
-                repeatOn = YES;
-            break;
-            case MPMusicRepeatModeNone:
-                repeatOn = NO;
-            break;
-            case MPMusicRepeatModeOne:
-                repeatOn = YES;
-            break;
-            case MPMusicRepeatModeAll:
-                repeatOn = YES;
-            break;
-        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            MPMusicPlayerController* controller = [MPMusicPlayerController systemMusicPlayer];
+            bool repeatOn = NO;
+            switch([controller repeatMode]){
+                case MPMusicRepeatModeDefault:
+                    repeatOn = YES;
+                break;
+                case MPMusicRepeatModeNone:
+                    repeatOn = NO;
+                break;
+                case MPMusicRepeatModeOne:
+                    repeatOn = YES;
+                break;
+                case MPMusicRepeatModeAll:
+                    repeatOn = YES;
+                break;
+            }
 
-        //change repeat mode
-        if(!repeatOn){
-            [controller setRepeatMode: MPMusicRepeatModeOne];
-        }else{
-            [controller setRepeatMode: MPMusicRepeatModeNone]; 
-        }
+            //change repeat mode
+            if(!repeatOn){
+                [controller setRepeatMode: MPMusicRepeatModeOne];
+            }else{
+                [controller setRepeatMode: MPMusicRepeatModeNone]; 
+            }
+        });
     }   
 }
 
