@@ -202,13 +202,13 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
 
         // Handle in Music provider
         XIMusic *musicProvider = [self.widgetDataProviders objectForKey:[XIMusic topic]];
-        [musicProvider toggleShuffle];
+        [musicProvider triggerShuffle];
 
     } else if ([action isEqualToString:@"toggleRepeat"]){
 
         // Handle in Music provider
         XIMusic *musicProvider = [self.widgetDataProviders objectForKey:[XIMusic topic]];
-        [musicProvider toggleRepeat];
+        [musicProvider triggerRepeat];
 
     } else if ([action isEqualToString:@"openapp"]) {
         

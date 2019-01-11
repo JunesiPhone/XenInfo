@@ -18,8 +18,8 @@
 - (void)togglePlayState;
 - (void)advanceTrack;
 - (void)retreatTrack;
-- (void)toggleShuffle;
-- (void)toggleRepeat;
+- (void)triggerShuffle;
+- (void)triggerRepeat;
 
 // Cached variables between refreshes.
 @property (nonatomic, strong) NSString *cachedArtist;

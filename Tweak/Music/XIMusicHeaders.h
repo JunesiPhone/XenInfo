@@ -55,4 +55,7 @@
 - (BOOL)isPaused;
 - (BOOL)isPlaying;
 - (BOOL)changeTrack:(int)arg1;
+-(BOOL)toggleShuffle;
+-(BOOL)toggleRepeat;
+-(BOOL)_sendMediaCommand:(unsigned)arg1 options:(id)arg2;
 @end
