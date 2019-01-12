@@ -160,6 +160,7 @@
     self.cachedArtist = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoArtist"]];
     self.cachedAlbum = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoAlbum"]];
     self.cachedTitle = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoTitle"]];
+    self.cachedBundleID = [player nowPlayingAppDisplayID];
     self.cachedDuration = [self convertToTime:[player currentDuration]];
     self.cachedElapsedTime = [self secondsToMinute:[player currentElapsed]];
 
@@ -196,8 +197,8 @@
 }
 
 - (NSString*)_variablesToJSString {
-    return [NSString stringWithFormat:@"var artist = '%@', album = '%@', title = '%@', isplaying = %d, currentDuration = '%@', currentElapsedTime = '%@', shuffleEnabled = '%@', repeatEnabled = '%@';", self.cachedArtist,
-            self.cachedAlbum, self.cachedTitle, self.cachedIsPlaying, self.cachedDuration, self.cachedElapsedTime, self.cachedShuffleEnabled, self.cachedRepeatEnabled];
+    return [NSString stringWithFormat:@"var artist = '%@', album = '%@', title = '%@', isplaying = %d, musicBundle = '%@', currentDuration = '%@', currentElapsedTime = '%@', shuffleEnabled = '%@', repeatEnabled = '%@';", self.cachedArtist,
+            self.cachedAlbum, self.cachedTitle, self.cachedIsPlaying, self.cachedBundleID, self.cachedDuration, self.cachedElapsedTime, self.cachedShuffleEnabled, self.cachedRepeatEnabled];
 }
 
 - (NSString*)_escapeString:(NSString*)input {
@@ -212,12 +213,58 @@
 
 #pragma mark Actions callable by widgets
 
+
+/* 
+    11.1.2 bug after device resprings and spotify was the last player it will not get all
+    info. When you get the next track it will get this info.
+*/
+-(void)iOS11Hack{
+    if(![self.cachedBundleID isEqualToString:@"com.apple.Music"]){
+        [self advanceTrack];
+        [self retreatTrack];
+    }
+}
+
+/*
+    Triggering _sendMediaCommand:0 (play) instead of toggling play removes the issue
+    with having to tap play twice when playing from spotify.
+
+    Leave fallbacks just for any oddities in other firmwares.
+*/
 - (void)togglePlayState {
     SBMediaController *mediaController = [objc_getClass("SBMediaController") sharedInstance];
-    if ([mediaController respondsToSelector:@selector(togglePlayPause)])
-        [mediaController togglePlayPause];
-    else if ([mediaController respondsToSelector:@selector(togglePlayPauseForEventSource:)])
-        [mediaController togglePlayPauseForEventSource:1];
+
+    if(![mediaController isPlaying]){
+        if([mediaController respondsToSelector:@selector(_sendMediaCommand:options:)]){ //11.3 11.1.2
+            [mediaController _sendMediaCommand:0 options:nil];
+            //Hack
+            if ([UIDevice currentDevice].systemVersion.floatValue >= 11.0 && [UIDevice currentDevice].systemVersion.floatValue < 11.3){
+                if(!self.cachedBundleID){ //empty after respring
+                    [self performSelector:@selector(iOS11Hack) withObject:nil afterDelay:2.5];
+                }
+            }
+        }else{
+            if([mediaController respondsToSelector:@selector(_sendMediaCommand:)]){ //10.2 9.3.3
+                [mediaController _sendMediaCommand:0];
+            }else if ([mediaController respondsToSelector:@selector(togglePlayPause)]){
+                [mediaController togglePlayPause];
+            }else if ([mediaController respondsToSelector:@selector(togglePlayPauseForEventSource:)]){
+                [mediaController togglePlayPauseForEventSource:1];   
+            }
+        }
+    }else{
+        if([mediaController respondsToSelector:@selector(_sendMediaCommand:options:)]){
+            [mediaController _sendMediaCommand:1 options:nil];
+        }else{
+            if([mediaController respondsToSelector:@selector(_sendMediaCommand:)]){
+                [mediaController _sendMediaCommand:1];
+            }else if ([mediaController respondsToSelector:@selector(togglePlayPause)]){
+                [mediaController togglePlayPause];
+            }else if ([mediaController respondsToSelector:@selector(togglePlayPauseForEventSource:)]){
+                [mediaController togglePlayPauseForEventSource:1];   
+            }
+        }
+    }
 }
 
 - (void)advanceTrack {

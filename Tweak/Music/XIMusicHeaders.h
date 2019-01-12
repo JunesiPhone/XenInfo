@@ -88,4 +88,6 @@
 -(BOOL)toggleShuffle;
 -(BOOL)toggleRepeat;
 -(BOOL)_sendMediaCommand:(unsigned)arg1 options:(id)arg2;
+-(BOOL)_sendMediaCommand:(unsigned)arg1 ;
+-(id)nowPlayingApplication;
 @end

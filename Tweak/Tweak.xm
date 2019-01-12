@@ -379,14 +379,6 @@ static long repeat;
 
 - (void)_mediaRemoteNowPlayingInfoDidChange:(id)arg1 {
     %orig;
-
-    //NSDictionary* dict = arg1;
-    //tested 11.1.2 could replace delay
-    // if([dict objectForKey:@"kMRMediaRemoteUpdatedContentItemsUserInfoKey"]){
-    //     // Forward message that new data is available after delay
-    //     [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIMusic topic]];
-    // }
-
     dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.5);
     dispatch_after(delay, dispatch_get_main_queue(), ^(void){
         // Forward message that new data is available after delay
@@ -418,7 +410,6 @@ static long repeat;
         [nowPlayingController startUpdating];
         return [nowPlayingController currentNowPlayingArtwork];
     }
-    
     return [globalMPUNowPlaying currentNowPlayingArtwork];
 }
 
