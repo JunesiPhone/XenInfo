@@ -335,6 +335,32 @@
 
 static MPUNowPlayingController *globalMPUNowPlaying;
 
+static long shuffle;
+static long repeat;
+
+%hook MPCPlaybackEngineMiddleware
+
+%new
++(long)getRepeat{
+    return repeat;
+}
+
+%new
++(long)getShuffle{
+    return shuffle;
+}
+
+-(long long)playerRepeatType:(long long)arg1 chain:(id)arg2{
+    repeat = arg1;
+    return %orig;
+}
+-(long long)playerShuffleType:(long long)arg1 chain:(id)arg2{
+    shuffle = arg1;
+    return %orig;
+}
+%end
+
+
 %hook SBMediaController
 
 /* 

@@ -44,6 +44,36 @@
 +(id)_xeninfo_albumArt;
 @end
 
+
+@interface MPCPlayerRequest
+-(id)playingItemProperties;
+-(id)queueSectionProperties;
+@end
+
+@interface MPRequestResponseController
+-(void)beginAutomaticResponseLoading;
+@end
+
+@interface MPCPlaybackEngineMiddleware
++(long)getRepeat;
++(long)getShuffle;
+@end
+
+@interface MPCPlayerResponseTracklist
+-(long long)repeatType;
+-(long long)shuffleType;
+@end
+
+@interface MPCPlayerResponse
+@property (nonatomic,readonly) MPCPlayerResponseTracklist * tracklist; 
+-(MPCPlayerResponseTracklist *)tracklist;
+@end
+
+@interface MediaControlsPanelViewController
++(id)panelViewControllerForCoverSheet;
+-(id)requestController;
+@end
+
 @interface SBMediaController : NSObject
 + (id)sharedInstance;
 - (BOOL)stop;
