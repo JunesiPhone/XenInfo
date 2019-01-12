@@ -335,6 +335,9 @@
 
 static MPUNowPlayingController *globalMPUNowPlaying;
 
+/*
+    Used for iOS 11 and 11.1.2 not 11.3
+*/
 static long shuffle;
 static long repeat;
 
