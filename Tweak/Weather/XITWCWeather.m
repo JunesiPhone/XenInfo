@@ -140,6 +140,10 @@
     self.nextUpdateTime = [[NSDate date] dateByAddingTimeInterval:interval];
 }
 
+- (void)_updateTimerFired:(NSTimer*)timer {
+    [self requestRefresh];
+}
+
 - (BOOL)_locationServicesAvailable {
     return [CLLocationManager locationServicesEnabled];
 }
