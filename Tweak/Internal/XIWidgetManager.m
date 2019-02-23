@@ -149,8 +149,8 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
     [dict setObject:remindersProvider forKey:[XIReminders topic]];
     
     // Alarms
-    XIAlarms *alarmsProvider = [[XIAlarms alloc] init];
-    [dict setObject:alarmsProvider forKey:[XIAlarms topic]];
+    //XIAlarms *alarmsProvider = [[XIAlarms alloc] init];
+    //[dict setObject:alarmsProvider forKey:[XIAlarms topic]];
     
     // Statusbar
     XIStatusBar *statusbarProvider = [[XIStatusBar alloc] init];
