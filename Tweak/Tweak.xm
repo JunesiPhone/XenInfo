@@ -475,12 +475,38 @@ static MPUNowPlayingController *globalMPUNowPlaying;
 
 #import "Alarms/XIAlarms.h"
 
+// iOS 10 and 11
 %hook SBClockNotificationManager
 
-// iOS 10+
 - (void)_updateAlarmStatusBarItemForPendingNotificationRequests:(id)arg1 {
     %orig;
     
+    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+}
+
+%end
+
+// iOS 12+
+%hook MTAlarmManagerExportedObject
+
+-(void)alarmsAdded:(id)arg1 {
+    %orig;
+    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+}
+
+-(void)alarmsUpdated:(id)arg1 {
+    %orig;
+    Xlog(@"Alarms updated: %@", arg1);
+    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+}
+
+-(void)alarmsRemoved:(id)arg1 {
+    %orig;
+    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+}
+
+-(void)alarmFired:(id)arg1 {
+    %orig;
     [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
 }
 

@@ -9,6 +9,8 @@
 #ifndef XIAlarmsHeaders_h
 #define XIAlarmsHeaders_h
 
+// Old style
+
 @interface ClockManager : NSObject
 + (instancetype)sharedManager;
 - (NSArray *)scheduledLocalNotificationsCache;
@@ -25,6 +27,27 @@
 - (BOOL)isFromSnooze;
 - (id)nextFireDateAfterDate:(id)arg1 localTimeZone:(id)arg2;
 - (id)userInfo;
+@end
+
+// New style
+
+@interface MTAlarm : NSObject
+@property (assign, nonatomic) BOOL allowsSnooze;
+@property (getter=isSnoozed,nonatomic,readonly) BOOL snoozed; 
+@property (nonatomic, readonly) NSDate *nextFireDate;
+@property (nonatomic, copy) NSString *title;
+@property (nonatomic, readonly) NSString *displayTitle;
+@property (assign, getter=isEnabled, nonatomic) BOOL enabled;
+@end
+
+@interface MTAlarmServer : NSObject
+- (void)getAlarmsWithCompletion:(void (^)(NSArray*))arg1;
+- (void)startListening;
+@end
+
+@interface MTAgent : NSObject
+@property (nonatomic,retain) MTAlarmServer * alarmServer;
++(id)agent;
 @end
 
 #endif /* XIAlarmsHeaders_h */

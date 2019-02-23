@@ -149,8 +149,8 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
     [dict setObject:remindersProvider forKey:[XIReminders topic]];
     
     // Alarms
-    //XIAlarms *alarmsProvider = [[XIAlarms alloc] init];
-    //[dict setObject:alarmsProvider forKey:[XIAlarms topic]];
+    XIAlarms *alarmsProvider = [[XIAlarms alloc] init];
+    [dict setObject:alarmsProvider forKey:[XIAlarms topic]];
     
     // Statusbar
     XIStatusBar *statusbarProvider = [[XIStatusBar alloc] init];
@@ -232,7 +232,7 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
         // Only store the latest update
         [self.queuedUpdatesWhileDeviceSleeping setObject:javascriptString forKey:topic];
     } else {
-        //Xlog(@"Updating with '%@' on '%@'", javascriptString, topic);
+        Xlog(@"Updating with '%@' on '%@'", javascriptString, topic);
     
         [self _updateWidgetsWithNewData:javascriptString onTopic:topic];
     }

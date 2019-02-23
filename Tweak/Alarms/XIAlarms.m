@@ -42,6 +42,14 @@
 }
 
 - (void)requestRefresh {
+    if ([UIDevice currentDevice].systemVersion.floatValue >= 12.0) {
+        [self _requestRefreshiOS12AndHigher];
+    } else {
+        [self _requestRefreshiOS11AndLower];
+    }
+}
+
+- (void)_requestRefreshiOS11AndLower {
     // Called for new information being available.
     
     ClockManager *manager = [objc_getClass("ClockManager") sharedManager];
@@ -97,6 +105,74 @@
         // And then send the data through to the widgets
         [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIAlarms topic]];
     }
+}
+
+- (void)_requestRefreshiOS12AndHigher {
+    // ClockManager is deprecated for iOS 11, and neutered in iOS 12
+    
+    // iOS 12 update notes
+    // MTAgent is the new entrypoint into MobileTimer.framework
+    // Every alarm is an MTAlarm instance
+    // Hooked into SBScheduledAlarmObserver for alarm changes
+    
+    MTAgent *agent = [objc_getClass("MTAgent") agent];
+    
+    if (![agent respondsToSelector:@selector(alarmServer)]) {
+        return;
+    }
+    
+    MTAlarmServer *server = agent.alarmServer;
+    
+    [server getAlarmsWithCompletion:^void(NSArray *array) {
+        // Array should contain a load of MTAlarm instances
+        
+        // Handle case of no alarms
+        if (!array || array.count == 0) {
+            self.alarms = @[];
+            
+            // And then send the data through to the widgets
+            [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIAlarms topic]];
+        } else {
+            NSMutableArray *parsedAlarms = [NSMutableArray array];
+            
+            for (MTAlarm *alarm in array) {
+                
+                if (alarm.enabled) {
+                    // Parse firedate into values
+                    NSDate *fireDate = alarm.nextFireDate;
+                    
+                    NSDateComponents *components = [[NSCalendar currentCalendar] components:NSCalendarUnitHour | NSCalendarUnitWeekday | NSCalendarUnitMinute fromDate:fireDate];
+                    int weekday = components.weekday - 1;
+                    int hour = components.hour;
+                    int minute = components.minute;
+                    
+                    NSString *weekdayStr = [NSString stringWithFormat:@"%d", weekday];
+                    NSString *hourStr = hour < 10 ? [NSString stringWithFormat:@"0%d", hour] : [NSString stringWithFormat:@"%d", hour];
+                    NSString *minuteStr = minute < 10 ? [NSString stringWithFormat:@"0%d", minute] : [NSString stringWithFormat:@"%d", minute];
+                    
+                    NSDictionary *parsedAlarm = @{
+                                                  @"title": @"",
+                                                  @"body": alarm.displayTitle ? alarm.displayTitle : @"",
+                                                  @"nextFireDateTimestamp": [NSNumber numberWithDouble:[fireDate timeIntervalSince1970]],
+                                                  @"nextFireDateTimeParsed": [self _parseDateToTimeString:fireDate],
+                                                  @"nextFireDateDayParsed": [self _parseDateToDayString:fireDate],
+                                                  @"allowSnooze": [NSNumber numberWithBool:alarm.allowsSnooze],
+                                                  @"repeatingFromSnoozed": [NSNumber numberWithBool:alarm.snoozed],
+                                                  @"legacyFireDateMinute": minuteStr,
+                                                  @"legacyFireDateHour": hourStr,
+                                                  @"legacyFireDateDay": weekdayStr,
+                                                  };
+                    
+                    [parsedAlarms addObject:parsedAlarm];
+                }
+            }
+            
+            self.alarms = parsedAlarms;
+            
+            // And then send the data through to the widgets
+            [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIAlarms topic]];
+        }
+    }];
 }
 
 - (NSString*)_parseDateToTimeString:(NSDate*)date {
