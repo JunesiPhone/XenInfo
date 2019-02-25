@@ -1,4 +1,4 @@
-export THEOS_DEVICE_IP=localhost -p 2222
+export THEOS_DEVICE_IP=192.168.1.19
 TARGET = iphone:10.1:10.1
 ARCHS = armv7 armv7s arm64
 FINALPACKAGE = 1

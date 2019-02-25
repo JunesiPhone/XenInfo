@@ -60,12 +60,28 @@
     // Handle telephony first.
     SBTelephonyManager *telephonyManager = [objc_getClass("SBTelephonyManager") sharedTelephonyManager];
     
+    //RSSI
     if ([telephonyManager respondsToSelector:@selector(signalStrength)])
         self.signalStrengthRSSI = [NSNumber numberWithInt:[telephonyManager signalStrength]];
     else
         self.signalStrengthRSSI = [NSNumber numberWithInt:0];
-    self.signalStrengthBars = [NSNumber numberWithInt:[telephonyManager signalStrengthBars]];
-    self.operatorName = [self _escapeString:[telephonyManager operatorName]];
+
+    //Bars
+    if ([telephonyManager respondsToSelector:@selector(signalStrengthBars)])
+        self.signalStrengthBars = [NSNumber numberWithInt:[telephonyManager signalStrengthBars]];
+    else if ([telephonyManager respondsToSelector:@selector(subscriptionInfo)])
+        self.signalStrengthBars = [NSNumber numberWithInt:[telephonyManager subscriptionInfo].signalStrengthBars];
+    else
+        self.signalStrengthBars = [NSNumber numberWithInt:0];
+
+    // Operator name
+    if ([telephonyManager respondsToSelector:@selector(operatorName)])
+        self.operatorName = [self _escapeString:[telephonyManager operatorName]];
+    else if ([telephonyManager respondsToSelector:@selector(subscriptionInfo)])
+        self.operatorName = [self _escapeString:[telephonyManager subscriptionInfo].operatorName];
+    else
+        self.operatorName = @"";
+
     if (!self.operatorName || [self.operatorName isEqualToString:@"(null)"] || [self.operatorName isEqualToString:@""])
         self.operatorName = @"NA";
     

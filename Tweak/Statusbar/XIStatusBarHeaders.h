@@ -9,11 +9,22 @@
 #ifndef XIStatusBarHeaders_h
 #define XIStatusBarHeaders_h
 
+
+@interface SBTelephonySubscriptionInfo : NSObject
+@property (nonatomic,copy,readonly) NSString * SIMLabel;
+@property (nonatomic,copy,readonly) NSString * shortSIMLabel;
+@property (nonatomic,readonly) unsigned long long signalStrengthBars;
+@property (nonatomic,readonly) unsigned long long maxSignalStrengthBars;
+@property (nonatomic,copy,readonly) NSString * operatorName;
+@property (nonatomic,copy,readonly) NSString * lastKnownNetworkCountryCode;
+@end
+
 @interface SBTelephonyManager : NSObject
 + (id)sharedTelephonyManager;
 - (int)signalStrengthBars;
 - (int)signalStrength;
 - (id)operatorName;
+-(SBTelephonySubscriptionInfo*)subscriptionInfo; // iOS 12
 @end
 
 @interface SBWiFiManager : NSObject
