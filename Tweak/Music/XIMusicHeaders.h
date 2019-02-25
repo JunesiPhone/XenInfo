@@ -36,14 +36,30 @@
 - (id)currentNowPlayingInfo;
 - (id)currentNowPlayingMetadata;
 -(void)startUpdating;
-//added
-+(double)_xeninfo_elapsedTime;
-+(double)_xeninfo_currentDuration;
 +(id)_xeninfo_MPUNowPlayingController;
 +(id)_xeninfo_nowPlayingAppDisplayID;
 +(id)_xeninfo_albumArt;
+-(BOOL)isPlaying;
 @end
 
+@interface _MRContentItemMetadataProtobuf
+@property (assign,nonatomic) double duration;
+@property (assign,nonatomic) double elapsedTime;
+@property (nonatomic,retain) NSString * albumName;
+@property (nonatomic,retain) NSString * title; 
+@property (nonatomic,retain) NSString * trackArtistName; 
+@property (assign,nonatomic) BOOL hasDuration;
+-(NSString *)lyricsURL;
+-(NSString *)artworkURL;
+@end
+
+@interface MRContentItemMetadata : _MRContentItemMetadataProtobuf
+@end
+
+@interface MRContentItem
++(id)_xeninfo_metaData;
+-(MRContentItemMetadata *)itemMetadata;
+@end
 
 @interface MPCPlayerRequest
 -(id)playingItemProperties;
@@ -69,9 +85,14 @@
 -(MPCPlayerResponseTracklist *)tracklist;
 @end
 
-@interface MediaControlsPanelViewController
+@interface MediaControlsEndpointController : NSObject
+- (id)requestController;
+@end
+
+@interface MediaControlsPanelViewController : UIViewController
 +(id)panelViewControllerForCoverSheet;
 -(id)requestController;
+-(id)endpointController;
 @end
 
 @interface SBMediaController : NSObject
@@ -90,4 +111,5 @@
 -(BOOL)_sendMediaCommand:(unsigned)arg1 options:(id)arg2;
 -(BOOL)_sendMediaCommand:(unsigned)arg1 ;
 -(id)nowPlayingApplication;
+-(int)nowPlayingProcessPID;
 @end

@@ -123,7 +123,7 @@
     }else if ([UIDevice currentDevice].systemVersion.floatValue >= 11.3){
        
         MPMusicPlayerController* controller = [MPMusicPlayerController systemMusicPlayer];
-        
+
         long shuffle = [controller shuffleMode];
         long repeat = [controller repeatMode];
 
@@ -137,21 +137,25 @@
     MPUNowPlayingController* player = [objc_getClass("MPUNowPlayingController") _xeninfo_MPUNowPlayingController];
     NSDictionary *info = [player currentNowPlayingInfo];
 
-    // if no track duration no need to update
-    // stops a few unnecessary updates
-    if([player currentDuration] <= 0){
-        return;
-    }
-
     /* 
         iOS 11.1.2 has issue with getting shuffle and repeat guessing iOS 11.0 as well
         this triggers updates even when a (stock) music player isn't shown.
     */
 
-    if ([UIDevice currentDevice].systemVersion.floatValue >= 11.0 && [UIDevice currentDevice].systemVersion.floatValue < 11.3){
+    if ([UIDevice currentDevice].systemVersion.floatValue >= 11.0 && [UIDevice currentDevice].systemVersion.floatValue < 11.2){
         MediaControlsPanelViewController* MCRef = [objc_getClass("MediaControlsPanelViewController") panelViewControllerForCoverSheet];
-        MPRequestResponseController* rc = [MCRef requestController];
-        [rc beginAutomaticResponseLoading];
+        MPRequestResponseController* rc = nil;
+        if([MCRef respondsToSelector:@selector(requestController)]){ //11.1.2
+            rc = [MCRef requestController];
+        }else if([MCRef respondsToSelector:@selector(endpointController)]){ //11.2.6 but leaving it
+            MediaControlsEndpointController* endPoint = [MCRef endpointController];
+            if([endPoint respondsToSelector:@selector(requestController)]){
+                rc = [endPoint requestController];
+            }
+        }
+        if(rc){
+            [rc beginAutomaticResponseLoading];
+        }
     }
 
     [self setShuffleAndRepeat];
@@ -164,7 +168,30 @@
     self.cachedDuration = [self convertToTime:[player currentDuration]];
     self.cachedElapsedTime = [self secondsToMinute:[player currentElapsed]];
 
-    self.cachedIsPlaying = [[objc_getClass("SBMediaController") sharedInstance] isPlaying];
+    /*
+        If iOS 11 or later we can get the data faster by returning the data we
+        hooked on MRContentItem
+    */
+    // if([UIDevice currentDevice].systemVersion.floatValue >= 11.0){
+    //     NSMutableDictionary* dict = [objc_getClass("MRContentItem") _xeninfo_metaData];
+    //     self.cachedArtist = [dict objectForKey:@"artistName"];
+    //     self.cachedAlbum = [dict objectForKey:@"albumName"];
+    //     self.cachedTitle = [dict objectForKey:@"title"];
+    //     self.cachedDuration = [self convertToTime:[[dict objectForKey:@"duration"] intValue]];
+    //     self.cachedElapsedTime = [self secondsToMinute:[[dict objectForKey:@"elapsed"] intValue]];
+    // }
+
+    /* 
+        isPlaying is slow to respond
+        if a player presses pause set to playing stopped.
+        this is done by setting cachedIsPlaying in togglePlayState
+    */
+    if(self.stoppedPlaying){
+        self.cachedIsPlaying = NO;
+        self.stoppedPlaying = NO;
+    }else{
+        self.cachedIsPlaying = [[objc_getClass("SBMediaController") sharedInstance] isPlaying];
+    }
     
     if ([self.cachedAlbum containsString:@"Listening on"]) {
         NSArray* arArray = [self.cachedTitle componentsSeparatedByString:@"•"];
@@ -185,10 +212,14 @@
     
     // Also handle artwork, by saving it to disk for the widget to read from.
     UIImage *uiimage = nil;
-    
+    NSData *imageData = nil;
     if ([objc_getClass("MPUNowPlayingController") _xeninfo_albumArt]){
         uiimage = [objc_getClass("MPUNowPlayingController") _xeninfo_albumArt];
-        [UIImagePNGRepresentation(uiimage) writeToFile:@"var/mobile/Documents/Artwork.jpg" atomically:YES];
+        imageData = UIImagePNGRepresentation(uiimage);
+        if(![imageData isEqualToData: self.cachedArtwork]){
+            self.cachedArtwork = imageData;
+            [imageData writeToFile:@"var/mobile/Documents/Artwork.jpg" atomically:YES];
+        }
     }
 
     // And then send the data through to the widgets
@@ -221,7 +252,6 @@
 -(void)iOS11Hack{
     if(![self.cachedBundleID isEqualToString:@"com.apple.Music"]){
         [self advanceTrack];
-        [self retreatTrack];
     }
 }
 
@@ -253,6 +283,7 @@
             }
         }
     }else{
+        self.stoppedPlaying = YES;
         if([mediaController respondsToSelector:@selector(_sendMediaCommand:options:)]){
             [mediaController _sendMediaCommand:1 options:nil];
         }else{

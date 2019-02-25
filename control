@@ -1,7 +1,7 @@
 Package: com.junesiphone.xeninfo
 Name: XenInfo
 Depends: mobilesubstrate, firmware (>= 9.0)
-Version: 2.0.1
+Version: 2.0.5
 Architecture: iphoneos-arm
 Description: Music, Weather, and battery info for XenHTML
 Maintainer: Junes <junesgraphics@gmail.com>

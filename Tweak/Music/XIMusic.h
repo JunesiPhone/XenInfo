@@ -29,7 +29,9 @@
 @property (nonatomic, strong) NSString *cachedElapsedTime;
 @property (nonatomic, strong) NSString *cachedBundleID;
 @property (nonatomic, readwrite) BOOL cachedIsPlaying;
+@property (nonatomic, readwrite) BOOL stoppedPlaying;
 @property (nonatomic, strong) NSString *cachedShuffleEnabled;
 @property (nonatomic, strong) NSString *cachedRepeatEnabled;
+@property (nonatomic, readwrite) NSData* cachedArtwork;
 
 @end

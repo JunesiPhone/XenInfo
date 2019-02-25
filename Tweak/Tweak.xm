@@ -363,6 +363,27 @@ static long repeat;
 }
 %end
 
+NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
+
+%hook MRContentItem
+
+%new
++(id)_xeninfo_metaData{
+    return xen_metaData;
+}
+
+-(id)itemMetadata{
+    MRContentItemMetadata* meta = %orig;
+    if([meta duration] > 0){
+        [xen_metaData setValue:[NSNumber numberWithDouble:[meta duration]] forKey:@"duration"];
+        [xen_metaData setValue:[NSNumber numberWithDouble:[meta elapsedTime]] forKey:@"elapsed"];
+        [xen_metaData setValue:[meta title] forKey:@"title"];
+        [xen_metaData setValue:[meta albumName] forKey: @"albumName"];
+        [xen_metaData setValue:[meta trackArtistName] forKey: @"artistName"];
+    }
+    return meta;
+}
+%end
 
 %hook SBMediaController
 
@@ -380,13 +401,11 @@ static long repeat;
     });
 }
 
+
+//iOS 11>
 - (void)_mediaRemoteNowPlayingInfoDidChange:(id)arg1 {
     %orig;
-    dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.5);
-    dispatch_after(delay, dispatch_get_main_queue(), ^(void){
-        // Forward message that new data is available after delay
-        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIMusic topic]];
-    });
+    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIMusic topic]];
 }
 %end
 
