@@ -244,7 +244,7 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
         // Only store the latest update
         [self.queuedUpdatesWhileDeviceSleeping setObject:javascriptString forKey:topic];
     } else {
-        //Xlog(@"Updating with '%@' on '%@'", javascriptString, topic);
+        Xlog(@"Updating with '%@' on '%@'", javascriptString, topic);
     
         [self _updateWidgetsWithNewData:javascriptString onTopic:topic];
     }
