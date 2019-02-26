@@ -116,6 +116,10 @@
     // Hooked into SBScheduledAlarmObserver for alarm changes
     
     MTAgent *agent = [objc_getClass("MTAgent") agent];
+
+    //Force sync when updated
+    MTAlarmStorage* store = [agent alarmStorage];
+    [store loadAlarmsSync];
     
     if (![agent respondsToSelector:@selector(alarmServer)]) {
         return;
