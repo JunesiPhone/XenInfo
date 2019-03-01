@@ -207,7 +207,7 @@
     // Not exactly the most deterministic way to ensure a new location has arrived!
     // We just want to ensure there's sufficient time for location services to get new locations.
     dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 1.5);
-    dispatch_after(delay, dispatch_get_main_queue(), ^(void){
+    dispatch_after(delay, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
         
         // Request new data
         [todayModel executeModelUpdateWithCompletion:^(BOOL arg1, NSError *arg2) {

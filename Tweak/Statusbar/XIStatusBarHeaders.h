@@ -24,6 +24,7 @@
 - (int)signalStrengthBars;
 - (int)signalStrength;
 - (id)operatorName;
+
 -(SBTelephonySubscriptionInfo*)subscriptionInfo; // iOS 12
 @end
 

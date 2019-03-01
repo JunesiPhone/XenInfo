@@ -377,9 +377,9 @@ NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
     if([meta duration] > 0){
         [xen_metaData setValue:[NSNumber numberWithDouble:[meta duration]] forKey:@"duration"];
         [xen_metaData setValue:[NSNumber numberWithDouble:[meta elapsedTime]] forKey:@"elapsed"];
-        [xen_metaData setValue:[meta title] forKey:@"title"];
-        [xen_metaData setValue:[meta albumName] forKey: @"albumName"];
-        [xen_metaData setValue:[meta trackArtistName] forKey: @"artistName"];
+        [xen_metaData setValue:([meta title] ? [meta title] : @"") forKey:@"title"];
+        [xen_metaData setValue:([meta albumName] ? [meta albumName] : @"") forKey: @"albumName"];
+        [xen_metaData setValue:([meta trackArtistName] ? [meta trackArtistName] : @"") forKey: @"artistName"];
     }
     return meta;
 }
@@ -395,7 +395,7 @@ NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
 - (void)_nowPlayingInfoChanged{
     %orig;
     dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.5);
-    dispatch_after(delay, dispatch_get_main_queue(), ^(void){
+    dispatch_after(delay, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
         // Forward message that new data is available after delay
         [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIMusic topic]];
     });
@@ -530,7 +530,6 @@ NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
 
 #import "Alarms/XIAlarms.h"
 
-
 // iOS 10 and 11
 %hook SBClockNotificationManager
 
@@ -547,6 +546,7 @@ NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
 
 -(void)alarmsAdded:(id)arg1 {
     %orig;
+
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
     });
@@ -554,6 +554,8 @@ NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
 
 -(void)alarmsUpdated:(id)arg1 {
     %orig;
+    Xlog(@"Alarms updated: %@", arg1);
+
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
     });
@@ -561,6 +563,7 @@ NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
 
 -(void)alarmsRemoved:(id)arg1 {
     %orig;
+    
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
     });
@@ -568,6 +571,7 @@ NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
 
 -(void)alarmFired:(id)arg1 {
     %orig;
+    
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
     });

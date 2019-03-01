@@ -46,7 +46,7 @@
         
         // Do an initial update
         dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5.0);
-        dispatch_after(delay, dispatch_get_main_queue(), ^(void){
+        dispatch_after(delay, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
             
             // Start location tracking in Weather.framework
             if ([self.weatherLocationManager respondsToSelector:@selector(setLocationTrackingReady:activelyTracking:watchKitExtension:)]) {

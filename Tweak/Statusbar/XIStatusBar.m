@@ -60,13 +60,13 @@
     // Handle telephony first.
     SBTelephonyManager *telephonyManager = [objc_getClass("SBTelephonyManager") sharedTelephonyManager];
     
-    //RSSI
+    // RSSI
     if ([telephonyManager respondsToSelector:@selector(signalStrength)])
         self.signalStrengthRSSI = [NSNumber numberWithInt:[telephonyManager signalStrength]];
     else
         self.signalStrengthRSSI = [NSNumber numberWithInt:0];
-
-    //Bars
+    
+    // Bars
     if ([telephonyManager respondsToSelector:@selector(signalStrengthBars)])
         self.signalStrengthBars = [NSNumber numberWithInt:[telephonyManager signalStrengthBars]];
     else if ([telephonyManager respondsToSelector:@selector(subscriptionInfo)])

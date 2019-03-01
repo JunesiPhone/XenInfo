@@ -321,7 +321,7 @@
 -(void)triggerShuffle {
     if(self.cachedIsPlaying){
         if ([UIDevice currentDevice].systemVersion.floatValue >= 11.3){
-            dispatch_async(dispatch_get_main_queue(), ^{
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 MPMusicPlayerController* controller = [MPMusicPlayerController systemMusicPlayer];
                 if([controller shuffleMode] == MPMusicShuffleModeDefault || [controller shuffleMode] == MPMusicShuffleModeOff){
                     [controller setShuffleMode: MPMusicShuffleModeSongs];
@@ -343,7 +343,7 @@
 -(void)triggerRepeat {
     if(self.cachedIsPlaying){
         if ([UIDevice currentDevice].systemVersion.floatValue >= 11.3){
-            dispatch_async(dispatch_get_main_queue(), ^{
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 MPMusicPlayerController* controller = [MPMusicPlayerController systemMusicPlayer];
                 if([controller repeatMode] == MPMusicRepeatModeDefault || [controller repeatMode] == MPMusicRepeatModeNone){
                     [controller setRepeatMode: MPMusicRepeatModeOne];
