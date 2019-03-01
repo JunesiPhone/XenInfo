@@ -32,6 +32,7 @@
 @property (nonatomic, copy) NSNumber *_xenhtml;
 @end
 
+
 ///////////////////////////////////////////////////////////////
 #pragma mark Internal Hooks
 ///////////////////////////////////////////////////////////////
@@ -334,22 +335,78 @@
 
 static MPUNowPlayingController *globalMPUNowPlaying;
 
+/*
+    Used for iOS 11 and 11.1.2 not 11.3
+*/
+static long shuffle;
+static long repeat;
+
+%hook MPCPlaybackEngineMiddleware
+
+%new
++(long)getRepeat{
+    return repeat;
+}
+
+%new
++(long)getShuffle{
+    return shuffle;
+}
+
+-(long long)playerRepeatType:(long long)arg1 chain:(id)arg2{
+    repeat = arg1;
+    return %orig;
+}
+-(long long)playerShuffleType:(long long)arg1 chain:(id)arg2{
+    shuffle = arg1;
+    return %orig;
+}
+%end
+
+NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
+
+%hook MRContentItem
+
+%new
++(id)_xeninfo_metaData{
+    return xen_metaData;
+}
+
+-(id)itemMetadata{
+    MRContentItemMetadata* meta = %orig;
+    if([meta duration] > 0){
+        [xen_metaData setValue:[NSNumber numberWithDouble:[meta duration]] forKey:@"duration"];
+        [xen_metaData setValue:[NSNumber numberWithDouble:[meta elapsedTime]] forKey:@"elapsed"];
+        [xen_metaData setValue:[meta title] forKey:@"title"];
+        [xen_metaData setValue:[meta albumName] forKey: @"albumName"];
+        [xen_metaData setValue:[meta trackArtistName] forKey: @"artistName"];
+    }
+    return meta;
+}
+%end
+
 %hook SBMediaController
+
+/* 
+    Note: Delay needed othewise info isn't correct
+    Example: If you press pause it will still say isPlaying.
+*/
 
 - (void)_nowPlayingInfoChanged{
     %orig;
-    
-    // Forward message that new data is available
-    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIMusic topic]];
+    dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.5);
+    dispatch_after(delay, dispatch_get_main_queue(), ^(void){
+        // Forward message that new data is available after delay
+        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIMusic topic]];
+    });
 }
 
+
+//iOS 11>
 - (void)_mediaRemoteNowPlayingInfoDidChange:(id)arg1 {
     %orig;
-    
-    // Forward message that new data is available
     [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIMusic topic]];
 }
-
 %end
 
 %hook MPUNowPlayingController
@@ -360,13 +417,12 @@ static MPUNowPlayingController *globalMPUNowPlaying;
     if (orig) {
         globalMPUNowPlaying = orig;
     }
-    
     return orig;
 }
 
 %new
-+(id)_xeninfo_currentNowPlayingInfo {
-    return [globalMPUNowPlaying currentNowPlayingInfo];
++(id)_xeninfo_MPUNowPlayingController{
+    return globalMPUNowPlaying;
 }
 
 %new
@@ -376,7 +432,6 @@ static MPUNowPlayingController *globalMPUNowPlaying;
         [nowPlayingController startUpdating];
         return [nowPlayingController currentNowPlayingArtwork];
     }
-    
     return [globalMPUNowPlaying currentNowPlayingArtwork];
 }
 
@@ -491,23 +546,35 @@ static MPUNowPlayingController *globalMPUNowPlaying;
 
 -(void)alarmsAdded:(id)arg1 {
     %orig;
-    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+    });
 }
 
 -(void)alarmsUpdated:(id)arg1 {
     %orig;
     Xlog(@"Alarms updated: %@", arg1);
-    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+    });
 }
 
 -(void)alarmsRemoved:(id)arg1 {
     %orig;
-    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+    });
 }
 
 -(void)alarmFired:(id)arg1 {
     %orig;
-    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+    });
 }
 
 %end

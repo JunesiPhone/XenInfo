@@ -45,9 +45,14 @@
 - (void)startListening;
 @end
 
+@interface MTAlarmStorage : NSObject
+-(void)loadAlarmsSync;
+@end
+
 @interface MTAgent : NSObject
 @property (nonatomic,retain) MTAlarmServer * alarmServer;
 +(id)agent;
+-(MTAlarmStorage *)alarmStorage;
 @end
 
 #endif /* XIAlarmsHeaders_h */

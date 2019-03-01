@@ -1,7 +1,9 @@
-include $(THEOS)/makefiles/common.mk
+export THEOS_DEVICE_IP=localhost -p 2222
+TARGET = iphone:10.1:10.1
+ARCHS = armv7 armv7s arm64
+FINALPACKAGE = 1
 
-export TARGET = iphone:10.1
-export ARCHS = armv7 armv7s arm64
+include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = XenInfo
 XenInfo_FILES = Tweak/Tweak.xm Tweak/Internal/XIWidgetManager.m Tweak/System/XISystem.m Tweak/Music/XIMusic.m Tweak/Weather/XIWeather.m Tweak/Weather/XITWCWeather.m Tweak/Weather/XIWAWeather.m Tweak/Battery/XIInfoStats.m Tweak/Events/XIEvents.m Tweak/Reminders/XIReminders.m Tweak/Alarms/XIAlarms.m Tweak/Statusbar/XIStatusBar.m ThirdParty/Reachability/Reachability.m

@@ -73,7 +73,7 @@
         self.signalStrengthBars = [NSNumber numberWithInt:[telephonyManager subscriptionInfo].signalStrengthBars];
     else
         self.signalStrengthBars = [NSNumber numberWithInt:0];
-    
+
     // Operator name
     if ([telephonyManager respondsToSelector:@selector(operatorName)])
         self.operatorName = [self _escapeString:[telephonyManager operatorName]];
@@ -81,7 +81,7 @@
         self.operatorName = [self _escapeString:[telephonyManager subscriptionInfo].operatorName];
     else
         self.operatorName = @"";
-    
+
     if (!self.operatorName || [self.operatorName isEqualToString:@"(null)"] || [self.operatorName isEqualToString:@""])
         self.operatorName = @"NA";
     

@@ -198,6 +198,18 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
         XIMusic *musicProvider = [self.widgetDataProviders objectForKey:[XIMusic topic]];
         [musicProvider retreatTrack];
         
+    } else if ([action isEqualToString:@"toggleShuffle"]){
+
+        // Handle in Music provider
+        XIMusic *musicProvider = [self.widgetDataProviders objectForKey:[XIMusic topic]];
+        [musicProvider triggerShuffle];
+
+    } else if ([action isEqualToString:@"toggleRepeat"]){
+
+        // Handle in Music provider
+        XIMusic *musicProvider = [self.widgetDataProviders objectForKey:[XIMusic topic]];
+        [musicProvider triggerRepeat];
+
     } else if ([action isEqualToString:@"openapp"]) {
         
         // Handle in System provider
