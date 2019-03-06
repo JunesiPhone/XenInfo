@@ -158,7 +158,7 @@
         }
     }
 
-    [self setShuffleAndRepeat];
+    //[self setShuffleAndRepeat];
 
     // Update cached variables
     self.cachedArtist = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoArtist"]];
