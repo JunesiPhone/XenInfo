@@ -142,21 +142,21 @@
         this triggers updates even when a (stock) music player isn't shown.
     */
 
-    if ([UIDevice currentDevice].systemVersion.floatValue >= 11.0 && [UIDevice currentDevice].systemVersion.floatValue < 11.2){
-        MediaControlsPanelViewController* MCRef = [objc_getClass("MediaControlsPanelViewController") panelViewControllerForCoverSheet];
-        MPRequestResponseController* rc = nil;
-        if([MCRef respondsToSelector:@selector(requestController)]){ //11.1.2
-            rc = [MCRef requestController];
-        }else if([MCRef respondsToSelector:@selector(endpointController)]){ //11.2.6 but leaving it
-            MediaControlsEndpointController* endPoint = [MCRef endpointController];
-            if([endPoint respondsToSelector:@selector(requestController)]){
-                rc = [endPoint requestController];
-            }
-        }
-        if(rc){
-            [rc beginAutomaticResponseLoading];
-        }
-    }
+    // if ([UIDevice currentDevice].systemVersion.floatValue >= 11.0 && [UIDevice currentDevice].systemVersion.floatValue < 11.2){
+    //     MediaControlsPanelViewController* MCRef = [objc_getClass("MediaControlsPanelViewController") panelViewControllerForCoverSheet];
+    //     MPRequestResponseController* rc = nil;
+    //     if([MCRef respondsToSelector:@selector(requestController)]){ //11.1.2
+    //         rc = [MCRef requestController];
+    //     }else if([MCRef respondsToSelector:@selector(endpointController)]){ //11.2.6 but leaving it
+    //         MediaControlsEndpointController* endPoint = [MCRef endpointController];
+    //         if([endPoint respondsToSelector:@selector(requestController)]){
+    //             rc = [endPoint requestController];
+    //         }
+    //     }
+    //     if(rc){
+    //         [rc beginAutomaticResponseLoading];
+    //     }
+    // }
 
     //[self setShuffleAndRepeat];
 
@@ -165,8 +165,8 @@
     self.cachedAlbum = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoAlbum"]];
     self.cachedTitle = [NSString stringWithFormat:@"%@",[info objectForKey:@"kMRMediaRemoteNowPlayingInfoTitle"]];
     self.cachedBundleID = [player nowPlayingAppDisplayID];
-    self.cachedDuration = [self convertToTime:[player currentDuration]];
-    self.cachedElapsedTime = [self secondsToMinute:[player currentElapsed]];
+    //self.cachedDuration = [self convertToTime:[player currentDuration]];
+    //self.cachedElapsedTime = [self secondsToMinute:[player currentElapsed]];
 
     /*
         If iOS 11 or later we can get the data faster by returning the data we
