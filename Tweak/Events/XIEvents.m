@@ -67,8 +67,8 @@
                                       @"location": [self _escapeString:event.location],
                                       @"isAllDay": [NSNumber numberWithBool:event.allDay],
                                       @"date": event.startDate ? [self.dateFormatter stringFromDate:event.startDate] : @"",
-                                      @"startTimeTimestamp": [NSNumber numberWithInt:event.startDate.timeIntervalSince1970 * 1000],
-                                      @"endTimeTimestamp": [NSNumber numberWithInt:event.endDate.timeIntervalSince1970 * 1000],
+                                      @"startTimeTimestamp": [NSNumber numberWithDouble:event.startDate.timeIntervalSince1970],
+                                      @"endTimeTimestamp": [NSNumber numberWithDouble:event.endDate.timeIntervalSince1970],
                                       @"associatedCalendarName": [self _escapeString:event.calendar.title],
                                       @"associatedCalendarHexColor": [self _hexStringFromColor:event.calendar.CGColor]
                                       };
