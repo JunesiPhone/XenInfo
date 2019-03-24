@@ -128,7 +128,7 @@ batteryPercent, batteryCharging, ramFree, ramUsed, ramAvailable, ramPhysical.
 events object
 
 * Music: (Music info)
-artist, album, title, isplaying.
+artist, album, title, isplaying. Note: It does not disable music controls.
 
 * Reminders: (Reminder app info)
 reminders object
@@ -137,7 +137,7 @@ reminders object
 signalStrength, signalBars, signalName, wifiStrength, wifiBars, wifiName, bluetoothOn.
 
 * System:
-systemVersion, deviceName, twentyfourhour, deviceType, ipAddress.
+systemVersion, deviceName, twentyfourhour, deviceType, ipAddress, notificationShowing.
 
 * Weather: (All weather info)
 city, address, temperature, low, high, feelsLike, chanceofrain, condition, naturalCondition, dayForecasts, hourForecast, latlong, celsius, isDay, conditionCode, updateTimeString, humidity, dewPoint, windChill, windDirection, windSpeed, visibility, sunsetTime, sunriseTime, sunsetTimeFormatted, sunriseTimeFormatted, precipitationForecast, pressure, precipitation24hr, heatIndex, moonPhase, cityState

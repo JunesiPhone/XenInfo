@@ -26,5 +26,6 @@
 @property (nonatomic, strong) NSString *cachedDeviceModel;
 @property (nonatomic, strong) NSString *cachedIPAddress;
 @property (nonatomic, readwrite) BOOL cachedUsing24H;
+@property (nonatomic, readwrite) BOOL cachedNotificationShowing;
 
 @end

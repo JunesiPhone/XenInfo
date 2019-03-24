@@ -486,9 +486,26 @@ static long repeat;
 
 %end
 
+#import "System/XISystem.h"
+
 ///////////////////////////////////////////////////////////////
 #pragma mark Display state
 ///////////////////////////////////////////////////////////////
+
+// set if notifications have content
+%hook SBDashBoardCombinedListViewController
+- (void)_setListHasContent:(_Bool)arg1{
+    if([[settingsDict objectForKey:@"system"] boolValue]){
+        if(arg1){
+            [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithBool:YES] forKey:@"notificationShowing" inDomain:nsDomainString];
+        }else{
+            [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithBool:NO] forKey:@"notificationShowing" inDomain:nsDomainString];
+        }
+        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XISystem topic]];
+    }
+    return %orig;
+}
+%end
 
 // iOS 9
 %hook SBLockScreenViewController

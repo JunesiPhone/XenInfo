@@ -22,6 +22,12 @@
 - (void)launchApplicationWithIdentifier:(NSString*)identifier suspended:(BOOL)suspended;
 @end
 
+static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
+@interface NSUserDefaults (nosblandscape)
+- (id)objectForKey:(NSString *)key inDomain:(NSString *)domain;
+- (void)setObject:(id)value forKey:(NSString *)key inDomain:(NSString *)domain;
+@end
+
 @implementation XISystem
 
 #pragma mark Delegate methods
@@ -52,11 +58,21 @@
 }
 
 - (void)requestRefresh {
-    // Not required for system; widgets are updated on load with this information.
+  [self _updateData];
+  [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XISystem topic]];
+}
+
+- (void)_updateData {
+    self.cachedSystemVersion = [self _systemVersion];
+    self.cachedDeviceName = [self _deviceName];
+    self.cachedDeviceModel = [self _deviceModel];
+    self.cachedUsing24H = [self _using24h];
+    self.cachedIPAddress = [self _ipAddress];
+    self.cachedNotificationShowing = [self _notificationsShowing];
 }
 
 - (NSString*)_variablesToJSString {
-    return [NSString stringWithFormat:@"var systemVersion = '%@', deviceName = '%@', twentyfourhour = '%@', deviceType = '%@', ipAddress = '%@';", self.cachedSystemVersion, self.cachedDeviceName, self.cachedUsing24H ? @"yes" : @"no", self.cachedDeviceModel, self.cachedIPAddress];
+    return [NSString stringWithFormat:@"var systemVersion = '%@', deviceName = '%@', twentyfourhour = '%@', deviceType = '%@', ipAddress = '%@', notificationShowing = '%@';", self.cachedSystemVersion, self.cachedDeviceName, self.cachedUsing24H ? @"yes" : @"no", self.cachedDeviceModel, self.cachedIPAddress, self.cachedNotificationShowing ? @"yes" : @"no"];
 }
 
 - (NSString*)_escapeString:(NSString*)input {
@@ -120,9 +136,15 @@
         self.cachedDeviceModel = [self _deviceModel];
         self.cachedUsing24H = [self _using24h];
         self.cachedIPAddress = [self _ipAddress];
+        self.cachedNotificationShowing = [self _notificationsShowing];
     }
     
     return self;
+}
+
+-(bool)_notificationsShowing{
+  NSNumber *showing = (NSNumber *)[[NSUserDefaults standardUserDefaults] objectForKey:@"notificationShowing" inDomain:nsDomainString];
+  return (showing) ? [showing boolValue] : NO;
 }
 
 -(NSString *)_ipAddress {
