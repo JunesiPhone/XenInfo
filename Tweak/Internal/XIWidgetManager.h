@@ -26,6 +26,7 @@ extern "C" {
 
 @property (nonatomic, strong) NSMutableArray *registeredWidgets;
 @property (nonatomic, strong) NSDictionary *widgetDataProviders;
+@property (nonatomic, strong) NSMutableDictionary *widgetSettings;
 
 + (instancetype)sharedInstance;
 

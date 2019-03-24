@@ -23,6 +23,13 @@
 
 #import "../../ThirdParty/Reachability/Reachability.h"
 
+static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
+@interface NSUserDefaults (nosblandscape)
+- (id)objectForKey:(NSString *)key inDomain:(NSString *)domain;
+- (void)setObject:(id)value forKey:(NSString *)key inDomain:(NSString *)domain;
+@end
+
+
 // Debug logging with nice printing
 void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSString *format, ...) {
     // Type to hold information about variable arguments.
@@ -80,6 +87,7 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
     if (self) {
         // Setup arrays.
         self.registeredWidgets = [NSMutableArray array];
+        self.widgetSettings = [self _populateWidgetSettings];
         self.widgetDataProviders = [self _populateWidgetDataProviders];
         
         self.queuedUpdatesWhileDeviceSleeping = [NSMutableDictionary dictionary];
@@ -117,45 +125,94 @@ void XenInfoLog(const char *file, int lineNumber, const char *functionName, NSSt
     return self;
 }
 
+-(NSMutableDictionary*)_populateWidgetSettings{
+    NSMutableDictionary *settingsDict = [@{} mutableCopy];
+    NSNumber *alarms = (NSNumber *)[[NSUserDefaults standardUserDefaults] objectForKey:@"alarms" inDomain:nsDomainString];
+    NSNumber *battery = (NSNumber *)[[NSUserDefaults standardUserDefaults] objectForKey:@"battery" inDomain:nsDomainString];
+    NSNumber *events = (NSNumber *)[[NSUserDefaults standardUserDefaults] objectForKey:@"events" inDomain:nsDomainString];
+    NSNumber *music = (NSNumber *)[[NSUserDefaults standardUserDefaults] objectForKey:@"music" inDomain:nsDomainString];
+    NSNumber *reminders = (NSNumber *)[[NSUserDefaults standardUserDefaults] objectForKey:@"reminders" inDomain:nsDomainString];
+    NSNumber *statusbar = (NSNumber *)[[NSUserDefaults standardUserDefaults] objectForKey:@"statusbar" inDomain:nsDomainString];
+    NSNumber *system = (NSNumber *)[[NSUserDefaults standardUserDefaults] objectForKey:@"system" inDomain:nsDomainString];
+    NSNumber *weather = (NSNumber *)[[NSUserDefaults standardUserDefaults] objectForKey:@"weather" inDomain:nsDomainString];
+    
+    //set enabled if no value.
+    bool alarmBool = (alarms) ? [alarms boolValue] : YES;
+    bool batteryBool = (battery) ? [battery boolValue] : YES;
+    bool eventsBool = (events) ? [events boolValue] : YES;
+    bool musicBool = (music) ? [music boolValue] : YES;
+    bool remindersBool = (reminders) ? [reminders boolValue] : YES;
+    bool statusbarBool = (statusbar) ? [statusbar boolValue] : YES;
+    bool systemBool = (system) ? [system boolValue] : YES;
+    bool weatherBool = (weather) ? [weather boolValue] : YES;
+
+    [settingsDict setObject:[NSNumber numberWithBool:alarmBool] forKey:@"alarm"];
+    [settingsDict setObject:[NSNumber numberWithBool:batteryBool] forKey:@"battery"];
+    [settingsDict setObject:[NSNumber numberWithBool:eventsBool] forKey:@"events"];
+    [settingsDict setObject:[NSNumber numberWithBool:musicBool] forKey:@"music"];
+    [settingsDict setObject:[NSNumber numberWithBool:remindersBool] forKey:@"reminders"];
+    [settingsDict setObject:[NSNumber numberWithBool:statusbarBool] forKey:@"statusbar"];
+    [settingsDict setObject:[NSNumber numberWithBool:systemBool] forKey:@"system"];
+    [settingsDict setObject:[NSNumber numberWithBool:weatherBool] forKey:@"weather"];
+
+    return settingsDict;
+}
+
 - (NSDictionary*)_populateWidgetDataProviders {
     NSMutableDictionary *dict = [@{} mutableCopy];
+    NSMutableDictionary* settingsDict = self.widgetSettings;
     
     /*****************************************************/
     /*            ADD NEW DATA PROVIDERS HERE            */
     /*****************************************************/
     
     // InfoStats (battery and RAM)
-    XIInfoStats *isProvider = [[XIInfoStats alloc] init];
-    [dict setObject:isProvider forKey:[XIInfoStats topic]];
+    if([[settingsDict objectForKey:@"battery"] boolValue]){
+        XIInfoStats *isProvider = [[XIInfoStats alloc] init];
+        [dict setObject:isProvider forKey:[XIInfoStats topic]];
+    }
     
     // System
-    XISystem *systemProvider = [[XISystem alloc] init];
-    [dict setObject:systemProvider forKey:[XISystem topic]];
+    if([[settingsDict objectForKey:@"system"] boolValue]){
+        XISystem *systemProvider = [[XISystem alloc] init];
+        [dict setObject:systemProvider forKey:[XISystem topic]];
+    }
     
     // Music
-    XIMusic *musicProvider = [[XIMusic alloc] init];
-    [dict setObject:musicProvider forKey:[XIMusic topic]];
+    if([[settingsDict objectForKey:@"music"] boolValue]){
+        XIMusic *musicProvider = [[XIMusic alloc] init];
+        [dict setObject:musicProvider forKey:[XIMusic topic]];
+    }
     
     // Weather
-    XIWeather *weatherProvider = [[XIWeather alloc] init];
-    [dict setObject:weatherProvider forKey:[XIWeather topic]];
+    if([[settingsDict objectForKey:@"weather"] boolValue]){
+        XIWeather *weatherProvider = [[XIWeather alloc] init];
+        [dict setObject:weatherProvider forKey:[XIWeather topic]];
+    }
     
     // Events
-    XIEvents *eventsProvider = [[XIEvents alloc] init];
-    [dict setObject:eventsProvider forKey:[XIEvents topic]];
+    if([[settingsDict objectForKey:@"events"] boolValue]){
+        XIEvents *eventsProvider = [[XIEvents alloc] init];
+        [dict setObject:eventsProvider forKey:[XIEvents topic]];
+    }
     
     // Reminders
-    XIReminders *remindersProvider = [[XIReminders alloc] init];
-    [dict setObject:remindersProvider forKey:[XIReminders topic]];
+    if([[settingsDict objectForKey:@"reminders"] boolValue]){
+        XIReminders *remindersProvider = [[XIReminders alloc] init];
+        [dict setObject:remindersProvider forKey:[XIReminders topic]];
+    }
     
     // Alarms
-    XIAlarms *alarmsProvider = [[XIAlarms alloc] init];
-    [dict setObject:alarmsProvider forKey:[XIAlarms topic]];
+    if([[settingsDict objectForKey:@"alarm"] boolValue]){
+        XIAlarms *alarmsProvider = [[XIAlarms alloc] init];
+        [dict setObject:alarmsProvider forKey:[XIAlarms topic]];
+    }
     
     // Statusbar
-    XIStatusBar *statusbarProvider = [[XIStatusBar alloc] init];
-    [dict setObject:statusbarProvider forKey:[XIStatusBar topic]];
-    
+    if([[settingsDict objectForKey:@"statusbar"] boolValue]){
+        XIStatusBar *statusbarProvider = [[XIStatusBar alloc] init];
+        [dict setObject:statusbarProvider forKey:[XIStatusBar topic]];
+    }
     
     return dict;
 }

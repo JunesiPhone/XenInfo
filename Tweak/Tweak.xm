@@ -32,6 +32,27 @@
 @property (nonatomic, copy) NSNumber *_xenhtml;
 @end
 
+static NSMutableDictionary* settingsDict = nil;
+static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
+@interface NSUserDefaults (nosblandscape)
+- (id)objectForKey:(NSString *)key inDomain:(NSString *)domain;
+- (void)setObject:(id)value forKey:(NSString *)key inDomain:(NSString *)domain;
+@end
+
+/* respring */
+@interface FBSystemService : NSObject
+    +(id)sharedInstance;
+    -(void)exitAndRelaunch:(BOOL)arg1;
+@end
+
+@interface SpringBoard : NSObject
+    - (void)_simulateLockButtonPress;
+    - (void)_simulateHomeButtonPress;
+    - (void)_relaunchSpringBoardNow;
+    +(id)sharedInstance;
+    -(id)_accessibilityFrontMostApplication;
+    -(void)clearMenuButtonTimer;
+@end
 
 ///////////////////////////////////////////////////////////////
 #pragma mark Internal Hooks
@@ -319,9 +340,9 @@
 
 - (void)updateBatteryState:(id)arg1{
     %orig;
-    
-    // Forward message that new data is available
-    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIInfoStats topic]];
+    if([[settingsDict objectForKey:@"battery"] boolValue]){
+        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIInfoStats topic]];
+    }
 }
 
 %end
@@ -363,27 +384,27 @@ static long repeat;
 }
 %end
 
-NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
+// NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
 
-%hook MRContentItem
+// %hook MRContentItem
 
-%new
-+(id)_xeninfo_metaData{
-    return xen_metaData;
-}
+// %new
+// +(id)_xeninfo_metaData{
+//     return xen_metaData;
+// }
 
--(id)itemMetadata{
-    MRContentItemMetadata* meta = %orig;
-    if([meta duration] > 0){
-        [xen_metaData setValue:[NSNumber numberWithDouble:[meta duration]] forKey:@"duration"];
-        [xen_metaData setValue:[NSNumber numberWithDouble:[meta elapsedTime]] forKey:@"elapsed"];
-        [xen_metaData setValue:([meta title] ? [meta title] : @"") forKey:@"title"];
-        [xen_metaData setValue:([meta albumName] ? [meta albumName] : @"") forKey: @"albumName"];
-        [xen_metaData setValue:([meta trackArtistName] ? [meta trackArtistName] : @"") forKey: @"artistName"];
-    }
-    return meta;
-}
-%end
+// -(id)itemMetadata{
+//     MRContentItemMetadata* meta = %orig;
+//     if([meta duration] > 0){
+//         [xen_metaData setValue:[NSNumber numberWithDouble:[meta duration]] forKey:@"duration"];
+//         [xen_metaData setValue:[NSNumber numberWithDouble:[meta elapsedTime]] forKey:@"elapsed"];
+//         [xen_metaData setValue:([meta title] ? [meta title] : @"") forKey:@"title"];
+//         [xen_metaData setValue:([meta albumName] ? [meta albumName] : @"") forKey: @"albumName"];
+//         [xen_metaData setValue:([meta trackArtistName] ? [meta trackArtistName] : @"") forKey: @"artistName"];
+//     }
+//     return meta;
+// }
+// %end
 
 %hook SBMediaController
 
@@ -394,21 +415,24 @@ NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
 
 - (void)_nowPlayingInfoChanged{
     %orig;
-    dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.5);
-    dispatch_after(delay, dispatch_get_main_queue(), ^(void){
-        // Forward message that new data is available after delay
-        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIMusic topic]];
-    });
+    if([[settingsDict objectForKey:@"music"] boolValue]){
+        dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.5);
+        dispatch_after(delay, dispatch_get_main_queue(), ^(void){
+            [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIMusic topic]];
+        });
+    }
 }
 
 
 //iOS 11>
 - (void)_mediaRemoteNowPlayingInfoDidChange:(id)arg1 {
     %orig;
-    dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.5);
-    dispatch_after(delay, dispatch_get_main_queue(), ^(void){
-        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIMusic topic]];
-    });
+    if([[settingsDict objectForKey:@"music"] boolValue]){
+        dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.5);
+        dispatch_after(delay, dispatch_get_main_queue(), ^(void){
+            [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIMusic topic]];
+        });
+    }
 }
 %end
 
@@ -416,7 +440,6 @@ NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
 
 - (id)init {
     id orig = %orig;
-    
     if (orig) {
         globalMPUNowPlaying = orig;
     }
@@ -437,7 +460,6 @@ NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
     }
     return [globalMPUNowPlaying currentNowPlayingArtwork];
 }
-
 %end
 
 ///////////////////////////////////////////////////////////////
@@ -450,14 +472,16 @@ NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
 
 - (void)_notifyItemChanged:(int)arg1{
     %orig;
-    
-    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIStatusBar topic]];
+    if([[settingsDict objectForKey:@"statusbar"] boolValue]){
+        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIStatusBar topic]];
+    }
 }
 
 -(void)_updateDataNetworkItem{
     %orig;
-    
-    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIStatusBar topic]];
+    if([[settingsDict objectForKey:@"statusbar"] boolValue]){
+        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIStatusBar topic]];
+    }
 }
 
 %end
@@ -471,14 +495,12 @@ NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
 
 -(void)_handleDisplayTurnedOff {
     %orig;
-    
     [[XIWidgetManager sharedInstance] noteDeviceDidEnterSleep];
 }
 
 // When in a phone call, this code is not run.
 - (void)_handleDisplayTurnedOnWhileUILocked:(id)locked {
     [[XIWidgetManager sharedInstance] noteDeviceDidExitSleep];
-    
     %orig;
 }
 
@@ -538,8 +560,9 @@ NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
 
 - (void)_updateAlarmStatusBarItemForPendingNotificationRequests:(id)arg1 {
     %orig;
-    
-    [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+    if([[settingsDict objectForKey:@"alarm"] boolValue]){
+        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+    }
 }
 
 %end
@@ -549,38 +572,87 @@ NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
 
 -(void)alarmsAdded:(id)arg1 {
     %orig;
-
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
-    });
+    if([[settingsDict objectForKey:@"alarm"] boolValue]){
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+        });
+    }
 }
 
 -(void)alarmsUpdated:(id)arg1 {
     %orig;
-    Xlog(@"Alarms updated: %@", arg1);
-
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
-    });
+    if([[settingsDict objectForKey:@"alarm"] boolValue]){
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+        });
+    }
 }
 
 -(void)alarmsRemoved:(id)arg1 {
     %orig;
-    
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
-    });
+    if([[settingsDict objectForKey:@"alarm"] boolValue]){
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+        });
+    }
 }
 
 -(void)alarmFired:(id)arg1 {
     %orig;
-    
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
-    });
+    if([[settingsDict objectForKey:@"alarm"] boolValue]){
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            [[XIWidgetManager sharedInstance] requestRefreshForDataProviderTopic:[XIAlarms topic]];
+        });
+    }
 }
 
 %end
+
+/*  
+    Settings:
+    Used to disable hooks if a topic isn't enabled.
+    Not all these are required here but might as well add them anyway.
+*/
+static void loadSettings() {
+    settingsDict = [@{} mutableCopy];
+
+    NSNumber *alarms = (NSNumber *)[[NSUserDefaults standardUserDefaults] objectForKey:@"alarms" inDomain:nsDomainString];
+    NSNumber *battery = (NSNumber *)[[NSUserDefaults standardUserDefaults] objectForKey:@"battery" inDomain:nsDomainString];
+    NSNumber *events = (NSNumber *)[[NSUserDefaults standardUserDefaults] objectForKey:@"events" inDomain:nsDomainString];
+    NSNumber *music = (NSNumber *)[[NSUserDefaults standardUserDefaults] objectForKey:@"music" inDomain:nsDomainString];
+    NSNumber *reminders = (NSNumber *)[[NSUserDefaults standardUserDefaults] objectForKey:@"reminders" inDomain:nsDomainString];
+    NSNumber *statusbar = (NSNumber *)[[NSUserDefaults standardUserDefaults] objectForKey:@"statusbar" inDomain:nsDomainString];
+    NSNumber *system = (NSNumber *)[[NSUserDefaults standardUserDefaults] objectForKey:@"system" inDomain:nsDomainString];
+    NSNumber *weather = (NSNumber *)[[NSUserDefaults standardUserDefaults] objectForKey:@"weather" inDomain:nsDomainString];
+    
+    //set enabled if no value.
+    bool alarmBool = (alarms) ? [alarms boolValue] : YES;
+    bool batteryBool = (battery) ? [battery boolValue] : YES;
+    bool eventsBool = (events) ? [events boolValue] : YES;
+    bool musicBool = (music) ? [music boolValue] : YES;
+    bool remindersBool = (reminders) ? [reminders boolValue] : YES;
+    bool statusbarBool = (statusbar) ? [statusbar boolValue] : YES;
+    bool systemBool = (system) ? [system boolValue] : YES;
+    bool weatherBool = (weather) ? [weather boolValue] : YES;
+
+    [settingsDict setObject:[NSNumber numberWithBool:alarmBool] forKey:@"alarm"];
+    [settingsDict setObject:[NSNumber numberWithBool:batteryBool] forKey:@"battery"];
+    [settingsDict setObject:[NSNumber numberWithBool:eventsBool] forKey:@"events"];
+    [settingsDict setObject:[NSNumber numberWithBool:musicBool] forKey:@"music"];
+    [settingsDict setObject:[NSNumber numberWithBool:remindersBool] forKey:@"reminders"];
+    [settingsDict setObject:[NSNumber numberWithBool:statusbarBool] forKey:@"statusbar"];
+    [settingsDict setObject:[NSNumber numberWithBool:systemBool] forKey:@"system"];
+    [settingsDict setObject:[NSNumber numberWithBool:weatherBool] forKey:@"weather"];
+}
+
+static void respring() {
+    SpringBoard *sb = (SpringBoard *)[UIApplication sharedApplication];
+    if ([sb respondsToSelector:@selector(_relaunchSpringBoardNow)]) {
+        [sb _relaunchSpringBoardNow];
+    } else if (%c(FBSystemService)) {
+        [[%c(FBSystemService) sharedInstance] exitAndRelaunch:YES];
+    }
+}
 
 ///////////////////////////////////////////////////////////////
 #pragma mark Constructor
@@ -588,9 +660,11 @@ NSMutableDictionary* xen_metaData = [[NSMutableDictionary alloc] init];
 
 %ctor {
     Xlog(@"Injecting...");
-    
     // Load Weather.framework if needed
     dlopen("/System/Library/PrivateFrameworks/Weather.framework/Weather", RTLD_NOW);
-    
+    //load settings
+    loadSettings();
+    //listen for respring
+    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)respring, CFSTR("com.junesiphone.xeninfosettings/respring"), NULL, 0);
     %init;
 }

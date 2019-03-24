@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Xen Info</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.junesiphone.xeninfosettings</string>
+			<key>key</key>
+			<string>alarms</string>
+			<key>label</key>
+			<string>Alarm</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.junesiphone.xeninfosettings</string>
+			<key>key</key>
+			<string>battery</string>
+			<key>label</key>
+			<string>Battery</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.junesiphone.xeninfosettings</string>
+			<key>key</key>
+			<string>events</string>
+			<key>label</key>
+			<string>Events</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.junesiphone.xeninfosettings</string>
+			<key>key</key>
+			<string>music</string>
+			<key>label</key>
+			<string>Music</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.junesiphone.xeninfosettings</string>
+			<key>key</key>
+			<string>reminders</string>
+			<key>label</key>
+			<string>Reminders</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.junesiphone.xeninfosettings</string>
+			<key>key</key>
+			<string>statusbar</string>
+			<key>label</key>
+			<string>Statusbar</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.junesiphone.xeninfosettings</string>
+			<key>key</key>
+			<string>system</string>
+			<key>label</key>
+			<string>System</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.junesiphone.xeninfosettings</string>
+			<key>key</key>
+			<string>weather</string>
+			<key>label</key>
+			<string>Weather</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>footerText</key>
+			<string>
+
+These options allow you to disable certain info in XenInfo. This will be great for debugging and assist in making XenInfo "lighter" by not passing info that is not needed. If you have a widget with only battery percent then all you would need enabled is battery. If you only have a clock widget, then disable all the toggles. Each setting requires a respring to take affect.
+
+Alarm: 
+
+Battery:
+
+Events:
+
+Music:
+
+Reminders:
+
+Statusbar:
+
+System:
+
+Weather:
+
+			</string>
+			<key>isStaticText</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>action</key>
+			<string>respring:</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Respring</string>
+		</dict>
+	</array>
+	<key>title</key>
+	<string>XenInfo</string>
+</dict>
+</plist>
