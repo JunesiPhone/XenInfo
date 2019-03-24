@@ -114,23 +114,36 @@
 
 These options allow you to disable certain info in XenInfo. This will be great for debugging and assist in making XenInfo "lighter" by not passing info that is not needed. If you have a widget with only battery percent then all you would need enabled is battery. If you only have a clock widget, then disable all the toggles. Each setting requires a respring to take affect.
 
-Alarm: 
 
-Battery:
 
-Events:
+*** Info Breakdown ***
 
-Music:
+* Alarm: (Any alarm info)
+alarmString, alarmTime, alarmHour, alarmMinute, alarmDay.
 
-Reminders:
+* Battery: (Battery and Ram info)
+batteryPercent, batteryCharging, ramFree, ramUsed, ramAvailable, ramPhysical.
 
-Statusbar:
+* Events: (Calendar info)
+events object
 
-System:
+* Music: (Music info)
+artist, album, title, isplaying.
 
-Weather:
+* Reminders: (Reminder app info)
+reminders object
 
-			</string>
+* Statusbar: (Statusbar info)
+signalStrength, signalBars, signalName, wifiStrength, wifiBars, wifiName, bluetoothOn.
+
+* System:
+systemVersion, deviceName, twentyfourhour, deviceType, ipAddress.
+
+* Weather: (All weather info)
+city, address, temperature, low, high, feelsLike, chanceofrain, condition, naturalCondition, dayForecasts, hourForecast, latlong, celsius, isDay, conditionCode, updateTimeString, humidity, dewPoint, windChill, windDirection, windSpeed, visibility, sunsetTime, sunriseTime, sunsetTimeFormatted, sunriseTimeFormatted, precipitationForecast, pressure, precipitation24hr, heatIndex, moonPhase, cityState
+
+
+Created by JunesiPhone and Matchstic 2019</string>
 			<key>isStaticText</key>
 			<true/>
 		</dict>
@@ -141,6 +154,30 @@ Weather:
 			<string>PSButtonCell</string>
 			<key>label</key>
 			<string>Respring</string>
+		</dict>
+		<dict>
+			<key>action</key>
+			<string>launchAPI:</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>XenInfo API</string>
+		</dict>
+		<dict>
+			<key>action</key>
+			<string>launchTwitterJune:</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>JunesiPhone Twitter</string>
+		</dict>
+		<dict>
+			<key>action</key>
+			<string>launchTwitterMatt:</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Matchstic Twitter</string>
 		</dict>
 	</array>
 	<key>title</key>

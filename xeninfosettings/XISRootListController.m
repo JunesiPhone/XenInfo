@@ -15,4 +15,14 @@
   notify_post("com.junesiphone.xeninfosettings/respring");
 }
 
+- (void)launchAPI:(id)sender {
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"http://junesiphone.com/xeninfo"]];
+}
+- (void)launchTwitterJune:(id)sender {
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"http://twitter.com/junesiphone"]];
+}
+- (void)launchTwitterMatt:(id)sender {
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"http://twitter.com/_matchstic"]];
+}
+
 @end
