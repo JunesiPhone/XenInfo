@@ -107,7 +107,9 @@
     if (!input)
         return @"";
     
-    input = [input stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+    input = [input stringByReplacingOccurrencesOfString:@"'" withString:@"&#39;"];
+    input = [input stringByReplacingOccurrencesOfString:@"&" withString:@"&#38;"];
+    input = [input stringByReplacingOccurrencesOfString:@"+" withString:@"&#43;"];
     input = [input stringByReplacingOccurrencesOfString: @"\"" withString:@"\\\""];
     
     return input;
