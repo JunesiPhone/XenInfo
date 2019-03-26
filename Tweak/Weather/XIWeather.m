@@ -195,9 +195,9 @@
                                      @"hourIndex": [NSNumber numberWithInt:hourForecast.hourIndex]
                                      }];
     }
-    
+
     NSDictionary *weatherInfo = @{
-                                  @"city": self.currentCity.name != nil ? self.currentCity.name : @"Local Weather",
+                                  @"city": [self _escapeString:self.currentCity.name] != nil ? [self _escapeString:self.currentCity.name] : @"Local Weather",
                                   @"address": self.reverseGeocodedAddress ? self.reverseGeocodedAddress : @{},
                                   @"temperature": [NSNumber numberWithInt:temp],
                                   @"low": dailyForecasts.count > 0 ? [dailyForecasts[0] objectForKey:@"low"] : @0,
@@ -228,7 +228,7 @@
                                   @"precipitation24hr": [NSNumber numberWithFloat:self.currentCity.precipitationPast24Hours],
                                   @"heatIndex": [NSNumber numberWithInt:(int)roundf(self.currentCity.heatIndex)],
                                   @"moonPhase": [NSNumber numberWithInt:(int)roundf(self.currentCity.moonPhase)],
-                                  @"cityState": self.currentCity.cityAndState != nil ? self.currentCity.cityAndState : @""
+                                  @"cityState": [self _escapeString:self.currentCity.cityAndState] != nil ? [self _escapeString:self.currentCity.cityAndState] : @""
                                   };
     
     NSString * jsonObj = [[NSString alloc] initWithData:[NSJSONSerialization dataWithJSONObject:weatherInfo
@@ -243,7 +243,9 @@
     if (!input)
         return @"";
     
-    input = [input stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+    input = [input stringByReplacingOccurrencesOfString:@"'" withString:@"&#39;"];
+    input = [input stringByReplacingOccurrencesOfString:@"&" withString:@"&#38;"];
+    input = [input stringByReplacingOccurrencesOfString:@"+" withString:@"&#43;"];
     input = [input stringByReplacingOccurrencesOfString: @"\"" withString:@"\\\""];
     input = [input stringByReplacingOccurrencesOfString: @"/" withString:@"\\/"];
     
