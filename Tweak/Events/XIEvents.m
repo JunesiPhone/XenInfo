@@ -19,6 +19,8 @@
 @property (nonatomic, strong) NSTimer *updateTimer;
 @end
 
+#define USE_CALENDAR_SETTINGS_MONITORING 0
+
 @implementation XIEvents
 
 #pragma mark Delegate methods
@@ -29,14 +31,18 @@
 
 // Called when the device enters sleep mode
 - (void)noteDeviceDidEnterSleep {
-    // Stop filesystem monitoring
-    dispatch_suspend(_source);
+    if (USE_CALENDAR_SETTINGS_MONITORING) {
+        // Stop filesystem monitoring
+        dispatch_suspend(_source);
+    }
 }
 
 // Called on the reverse
 - (void)noteDeviceDidExitSleep {
-    // Restart FS monitoring
-    dispatch_resume(_source);
+    if (USE_CALENDAR_SETTINGS_MONITORING) {
+        // Restart FS monitoring
+        dispatch_resume(_source);
+    }
 }
 
 // Register a delegate object to call upon when new data becomes available.
@@ -51,48 +57,50 @@
 }
 
 - (void)requestRefresh {
-    [self.updateTimer invalidate];
-    
-    // Called for new information being available.
-    NSDate *startDate = [NSDate date];
-    NSDate *endDate = [NSDate dateWithTimeInterval:60*60*24*7 sinceDate:startDate];
-    NSArray *events = [self _calendarEntriesBetweenStartTime:startDate andEndTime:endDate];
-    
-    // Parse the events!
-    NSDate *nextUpdateTime = [NSDate dateWithTimeInterval:60*60 sinceDate:[NSDate date]]; // In an hour
-    NSMutableArray *array = [NSMutableArray array];
-    for (EKEvent *event in events) {
-        NSDictionary *parsedEvent = @{
-                                      @"title": [self _escapeString:event.title],
-                                      @"location": [self _escapeString:event.location],
-                                      @"isAllDay": [NSNumber numberWithBool:event.allDay],
-                                      @"date": event.startDate ? [self.dateFormatter stringFromDate:event.startDate] : @"",
-                                      @"startTimeTimestamp": [NSNumber numberWithDouble:event.startDate.timeIntervalSince1970],
-                                      @"endTimeTimestamp": [NSNumber numberWithDouble:event.endDate.timeIntervalSince1970],
-                                      @"associatedCalendarName": [self _escapeString:event.calendar.title],
-                                      @"associatedCalendarHexColor": [self _hexStringFromColor:event.calendar.CGColor]
-                                      };
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void) {
+        [self.updateTimer invalidate];
         
-        [array addObject:parsedEvent];
+        // Called for new information being available.
+        NSDate *startDate = [NSDate date];
+        NSDate *endDate = [NSDate dateWithTimeInterval:60*60*24*7 sinceDate:startDate];
+        NSArray *events = [self _calendarEntriesBetweenStartTime:startDate andEndTime:endDate];
         
-        // Update our next update time if needed.
-        if (event.endDate.timeIntervalSince1970 < nextUpdateTime.timeIntervalSince1970) {
-            nextUpdateTime = event.endDate;
+        // Parse the events!
+        NSDate *nextUpdateTime = [NSDate dateWithTimeInterval:60*60 sinceDate:[NSDate date]]; // In an hour
+        NSMutableArray *array = [NSMutableArray array];
+        for (EKEvent *event in events) {
+            NSDictionary *parsedEvent = @{
+                                          @"title": [self _escapeString:event.title],
+                                          @"location": [self _escapeString:event.location],
+                                          @"isAllDay": [NSNumber numberWithBool:event.allDay],
+                                          @"date": event.startDate ? [self.dateFormatter stringFromDate:event.startDate] : @"",
+                                          @"startTimeTimestamp": [NSNumber numberWithDouble:event.startDate.timeIntervalSince1970],
+                                          @"endTimeTimestamp": [NSNumber numberWithDouble:event.endDate.timeIntervalSince1970],
+                                          @"associatedCalendarName": [self _escapeString:event.calendar.title],
+                                          @"associatedCalendarHexColor": [self _hexStringFromColor:event.calendar.CGColor]
+                                          };
+            
+            [array addObject:parsedEvent];
+            
+            // Update our next update time if needed.
+            if (event.endDate.timeIntervalSince1970 < nextUpdateTime.timeIntervalSince1970) {
+                nextUpdateTime = event.endDate;
+            }
         }
-    }
-    
-    // Schedule the update timer
-    NSTimeInterval interval = nextUpdateTime.timeIntervalSince1970 - startDate.timeIntervalSince1970;
-    self.updateTimer = [NSTimer scheduledTimerWithTimeInterval:interval
-                                                        target:self
-                                                      selector:@selector(requestRefresh)
-                                                      userInfo:nil
-                                                       repeats:NO];
-    
-    self.entries = array;
-    
-    // And then send the data through to the widgets
-    [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIEvents topic]];
+        
+        // Schedule the update timer
+        NSTimeInterval interval = nextUpdateTime.timeIntervalSince1970 - startDate.timeIntervalSince1970;
+        self.updateTimer = [NSTimer scheduledTimerWithTimeInterval:interval
+                                                            target:self
+                                                          selector:@selector(requestRefresh)
+                                                          userInfo:nil
+                                                           repeats:NO];
+        
+        self.entries = array;
+        
+        // And then send the data through to the widgets
+        [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIEvents topic]];
+    });
 }
 
 - (NSString*)_variablesToJSString {
@@ -142,6 +150,7 @@
 
 - (void)_setupNotificationMonitoring {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_calendarUpdateNotificationRecieved:) name:@"EKEventStoreChangedNotification" object:self.store];
+    
     [self _monitorPath:@"/var/mobile/Library/Preferences/com.apple.mobilecal.plist"];
 }
 
@@ -152,31 +161,32 @@
 // This allows us to fire off a callback when the user changes which calendars to display in-app.
 // From: InfoStats 2
 - (void)_monitorPath:(NSString*)path {
-    
-    int descriptor = open([path fileSystemRepresentation], O_EVTONLY);
-    if (descriptor < 0) {
-        return;
-    }
-    
-    __block XIEvents *blockSelf = self;
-    _source = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, descriptor,                                                  DISPATCH_VNODE_DELETE | DISPATCH_VNODE_WRITE | DISPATCH_VNODE_EXTEND | DISPATCH_VNODE_ATTRIB | DISPATCH_VNODE_LINK | DISPATCH_VNODE_RENAME | DISPATCH_VNODE_REVOKE, dispatch_get_global_queue(0, 0));
-    
-    dispatch_source_set_event_handler(_source, ^{
-        unsigned long flags = dispatch_source_get_data(_source);
-        
-        if (flags & DISPATCH_VNODE_DELETE) {
-            [blockSelf _monitorPath:path];
-        } else {
-            // Update our data.
-            [self requestRefresh];
+    if (USE_CALENDAR_SETTINGS_MONITORING) {
+        int descriptor = open([path fileSystemRepresentation], O_EVTONLY);
+        if (descriptor < 0) {
+            return;
         }
-    });
-    
-    dispatch_source_set_cancel_handler(_source, ^(void) {
-        close(descriptor);
-    });
-    
-    dispatch_resume(_source);
+        
+        __block XIEvents *blockSelf = self;
+        _source = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, descriptor,                                                  DISPATCH_VNODE_DELETE | DISPATCH_VNODE_WRITE | DISPATCH_VNODE_EXTEND | DISPATCH_VNODE_ATTRIB, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+        
+        dispatch_source_set_event_handler(_source, ^{
+            unsigned long flags = dispatch_source_get_data(_source);
+            
+            if (flags & DISPATCH_VNODE_DELETE) {
+                [blockSelf _monitorPath:path];
+            } else {
+                // Update our data.
+                [self requestRefresh];
+            }
+        });
+        
+        dispatch_source_set_cancel_handler(_source, ^(void) {
+            close(descriptor);
+        });
+        
+        dispatch_resume(_source);
+    }
 }
 
 - (NSArray*)_calendarEntriesBetweenStartTime:(NSDate*)startTime andEndTime:(NSDate*)endTime {
