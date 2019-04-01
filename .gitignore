@@ -3,4 +3,3 @@ Packages/
 .theos
 *.dylib
 *.deb
-Makefile
