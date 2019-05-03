@@ -109,13 +109,33 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
      }
  }
  
+ /* added as the re-assigning delegates caused crashes on Chimera */
+ %new
+ - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+    NSURLRequest *request = navigationAction.request;
+    NSString *url = [[request URL] absoluteString];    
+    if ([url hasPrefix:@"xeninfo:"]) {
+        NSArray *components = [url componentsSeparatedByString:@":"];
+        NSString *function = [components objectAtIndex:1];
+
+        // Pass through the function and parameters through to the widget manager.
+        NSString *parameter = components.count > 2 ? [components objectAtIndex:2] : @"";
+
+        // Send to widget manager.
+        [[XIWidgetManager sharedInstance] widget:self didRequestAction:function withParameter:parameter];
+
+        // Make sure to cancel this navigation!
+        decisionHandler(WKNavigationActionPolicyCancel);
+    } else {
+        decisionHandler(WKNavigationActionPolicyAllow);
+    }
+ }
  %end
+
 
 // Not using UIWebView delegate, so use a workaround
 %hook UIWebView
-
 %property (nonatomic, copy) NSNumber *_xenhtml; // readwrite not supported by my version of theos.
-
 %new
 - (void)webViewDidFinishLoad:(UIWebView *)webView {
     if (self.hijackedDelegate) {
@@ -129,20 +149,29 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
         [[XIWidgetManager sharedInstance] registerWidget:self];
     }
 }
-
 %end
 
 %hook WKWebView
-
 %property (nonatomic, copy) NSNumber *_xenhtml;
-
 %end
+
+
+/** 
+    Keeping this for reference, may find the issue later.
+
+    Removing as crashes on Chimera. 
+    Replaced by adding the NavigationAction directly on XENHWidgetController
+    as XenInfo is only for XenHTML.
+**/
+
+
+/* 
 
 #pragma mark Handle when a webview is deciding to navigate to a new page
 
-// The idea is that we force the WKWebView to become its own navigationDelegate.
-// Therefore, we can then intercept any incoming delegate calls as required, then
-// forward them to the actual navigationDelegate we hijacked.
+//The idea is that we force the WKWebView to become its own navigationDelegate.
+//Therefore, we can then intercept any incoming delegate calls as required, then
+//forward them to the actual navigationDelegate we hijacked.
 
 %hook WKWebView
 
@@ -164,9 +193,7 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
     if([delegate isKindOfClass:[objc_getClass("XENHWidgetController") class]]){
         if(![delegate isEqual:self]){
             self.hijackedNavigationDelegate = delegate;
-            //Crashes Chimera
-            //%orig((id<WKNavigationDelegate>)self);
-            %orig;
+            %orig((id<WKNavigationDelegate>)self);
         }
     }else{
         %orig;
@@ -331,6 +358,7 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
 }
 
 %end
+*/
 
 ///////////////////////////////////////////////////////////////
 #pragma mark Battery Information Hooks
