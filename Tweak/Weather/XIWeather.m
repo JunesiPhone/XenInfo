@@ -8,6 +8,7 @@
 
 #import "XIWeather.h"
 #import "XIWeatherHeaders.h"
+#import "SubstituteFix.h"
 #import "../Internal/XIWidgetManager.h"
 
 #import <objc/runtime.h>
@@ -258,9 +259,13 @@
         CFStringRef *_weatherDescription = (CFStringRef*)MSFindSymbol(weather, "_WeatherDescription") + condition;
         NSString *cond = (__bridge id)*_weatherDescription;
         return [[NSBundle bundleWithPath:@"/System/Library/PrivateFrameworks/Weather.framework"] localizedStringForKey:cond value:@"" table:@"WeatherFrameworkLocalizableStrings"];
-    } else if (weather && [[UIDevice currentDevice] systemVersion].floatValue >= 11.0 && [[UIDevice currentDevice] systemVersion].floatValue < 12.0) {
-      //broke on Chimera 12.1 no idea why
-      CFStringRef (*WAConditionsLineStringFromConditionCode)() = MSFindSymbol(weather, "_WAConditionsLineStringFromConditionCode");
+    } else if (weather && [[UIDevice currentDevice] systemVersion].floatValue >= 11.0) {
+      /* 
+          Chimera 
+          Function pointers from MSFindSymbol, etc. are no longer callable directly because they are returned without a PAC. To make them callable, you must sign them first.
+          make_sym_callable is signing this.
+      */
+      CFStringRef (*WAConditionsLineStringFromConditionCode)() = make_sym_callable(MSFindSymbol(weather, "_WAConditionsLineStringFromConditionCode"));
       NSString *cond = (__bridge id)WAConditionsLineStringFromConditionCode(condition);
       if (!cond)
           cond = @"";
