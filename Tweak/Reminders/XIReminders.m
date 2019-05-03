@@ -66,11 +66,12 @@
             NSDictionary *parsed = @{
                                      @"title": title ? title : @"",
                                      @"dueDate": dueDate ? dueDate : @"",
-                                     @"dueDateTimestamp": [NSNumber numberWithInt:[self _dueDateFromReminder:reminder].timeIntervalSince1970 * 1000],
+                                     @"dueDateTimestamp": [NSNumber numberWithInt:[self _dueDateFromReminder:reminder].timeIntervalSince1970],
                                      @"priority": [NSNumber numberWithLong:reminder.priority]
                                      };
-            
+
             [array addObject:parsed];
+
             
             // Update our next update time if needed.
             /*if ([reminder completionDate].timeIntervalSince1970 < nextUpdateTime.timeIntervalSince1970 && reminder.completed) {
