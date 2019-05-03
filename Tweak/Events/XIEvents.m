@@ -119,6 +119,7 @@
     input = [input stringByReplacingOccurrencesOfString:@"&" withString:@"&#38;"];
     input = [input stringByReplacingOccurrencesOfString:@"+" withString:@"&#43;"];
     input = [input stringByReplacingOccurrencesOfString: @"\"" withString:@"\\\""];
+    input = [input stringByReplacingOccurrencesOfString: @"\n" withString:@" "];
     
     return input;
 }
