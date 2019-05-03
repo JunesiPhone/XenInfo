@@ -47,7 +47,6 @@
         // Do an initial update
         dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5.0);
         dispatch_after(delay, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
-            
             // Start location tracking in Weather.framework
             if ([self.weatherLocationManager respondsToSelector:@selector(setLocationTrackingReady:activelyTracking:watchKitExtension:)]) {
                 [self.weatherLocationManager setLocationTrackingReady:YES activelyTracking:NO watchKitExtension:NO];
@@ -150,11 +149,23 @@
 
 - (City*)_currentCity {
     if ([self _locationServicesAvailable]) {
-        return [[objc_getClass("WeatherPreferences") sharedPreferences] localWeatherCity];
+        City* city = [[objc_getClass("WeatherPreferences") sharedPreferences] localWeatherCity];
+
+        //fix for a user on 10.2
+        if(!city){
+            if([[[objc_getClass("WeatherPreferences") sharedPreferences]loadSavedCities] count] > 0){
+                city = [[objc_getClass("WeatherPreferences") sharedPreferences]loadSavedCities][0];
+                if(!city.name && [[[objc_getClass("WeatherPreferences") sharedPreferences]loadSavedCities] count] >= 1){
+                    city = [[objc_getClass("WeatherPreferences") sharedPreferences]loadSavedCities][1];
+                }
+            }
+        }
+
+        return city;
     } else {
         NSArray *savedCities = [[objc_getClass("WeatherPreferences") sharedPreferences] loadSavedCities];
         City *result;
-        
+
         for (City *city in savedCities) {
             if (!city.isLocalWeatherCity) {
                 result = city;
