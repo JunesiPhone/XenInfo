@@ -258,14 +258,14 @@
         CFStringRef *_weatherDescription = (CFStringRef*)MSFindSymbol(weather, "_WeatherDescription") + condition;
         NSString *cond = (__bridge id)*_weatherDescription;
         return [[NSBundle bundleWithPath:@"/System/Library/PrivateFrameworks/Weather.framework"] localizedStringForKey:cond value:@"" table:@"WeatherFrameworkLocalizableStrings"];
-    } else if (weather && [[UIDevice currentDevice] systemVersion].floatValue >= 11.0) {
-        CFStringRef (*WAConditionsLineStringFromConditionCode)() = MSFindSymbol(weather, "_WAConditionsLineStringFromConditionCode");
+    } else if (weather && [[UIDevice currentDevice] systemVersion].floatValue >= 11.0 && [[UIDevice currentDevice] systemVersion].floatValue < 12.0) {
+      //broke on Chimera 12.1 no idea why
+      CFStringRef (*WAConditionsLineStringFromConditionCode)() = MSFindSymbol(weather, "_WAConditionsLineStringFromConditionCode");
+      NSString *cond = (__bridge id)WAConditionsLineStringFromConditionCode(condition);
+      if (!cond)
+          cond = @"";
         
-        NSString *cond = (__bridge id)WAConditionsLineStringFromConditionCode(condition);
-        if (!cond)
-            cond = @"";
-        
-        return cond;
+      return cond;
     }
     
     return @"";

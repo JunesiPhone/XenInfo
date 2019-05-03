@@ -1,5 +1,5 @@
 include $(THEOS)/makefiles/common.mk
-
+ARCHS = armv7 armv7s arm64 arm64e
 BUNDLE_NAME = XenInfoSettings
 XenInfoSettings_FILES = XISRootListController.m
 XenInfoSettings_INSTALL_PATH = /Library/PreferenceBundles

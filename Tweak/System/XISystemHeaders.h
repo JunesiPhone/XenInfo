@@ -15,3 +15,8 @@
 + (instancetype)sharedInstance;
 - (SBSearchGesture*)searchGesture;
 @end
+
+/* Build with 9.2 to support armv7 and armv7s */
+@interface UIApplication (Additions)
+-(void)openURL:arg1 options:arg2 completionHandler:arg3;
+@end

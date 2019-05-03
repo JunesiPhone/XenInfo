@@ -164,7 +164,9 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
     if([delegate isKindOfClass:[objc_getClass("XENHWidgetController") class]]){
         if(![delegate isEqual:self]){
             self.hijackedNavigationDelegate = delegate;
-            %orig((id<WKNavigationDelegate>)self);
+            //Crashes Chimera
+            //%orig((id<WKNavigationDelegate>)self);
+            %orig;
         }
     }else{
         %orig;

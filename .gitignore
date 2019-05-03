@@ -2,4 +2,5 @@ LatestBuild/
 Packages/
 .theos
 *.dylib
+**.DS_Store
 *.deb

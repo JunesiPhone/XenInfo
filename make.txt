@@ -1,0 +1,5 @@
+/* Build with debugging on 2nd machine */
+export THEOS_DEVICE_IP=localhost -p 2222
+TARGET = iphone:clang:11.2:11.2
+ARCHS =  arm64 arm64e
+FINALPACKAGE = 1
