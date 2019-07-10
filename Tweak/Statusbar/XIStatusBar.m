@@ -17,6 +17,7 @@
 @property (nonatomic, strong) NSNumber *wifiStrengthRSSI;
 @property (nonatomic, strong) NSNumber *wifiStrengthBars;
 @property (nonatomic, strong) NSString *wifiNetworkName;
+@property (nonatomic, strong) NSString *signalNetworkType;
 @property (nonatomic, readwrite) BOOL bluetoothConnected;
 @end
 
@@ -56,10 +57,51 @@
     [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIStatusBar topic]];
 }
 
+//https://developer.apple.com/documentation/coretelephony/cttelephonynetworkinfo/radio_access_technology_constants?language=objc
+//could use [telephonyManager dataConnectionType] but returns an int and I couldn't map it to anything.
+- (NSString *)getNetworkType{ 
+
+    if(!self.networkInfo){
+        //store so we don't keep creating new instances
+        self.networkInfo = [CTTelephonyNetworkInfo new];   
+    }
+
+    NSString* info = self.networkInfo.currentRadioAccessTechnology;
+
+    if ([info isEqualToString:CTRadioAccessTechnologyGPRS]) {
+        return @"2G";
+    } else if ([info isEqualToString:CTRadioAccessTechnologyEdge]) {
+        return @"2G";
+    } else if ([info isEqualToString:CTRadioAccessTechnologyWCDMA]) {
+        return @"3G";
+    } else if ([info isEqualToString:CTRadioAccessTechnologyHSDPA]) {
+        return @"3G";
+    } else if ([info isEqualToString:CTRadioAccessTechnologyHSUPA]) {
+        return @"3G";
+    } else if ([info isEqualToString:CTRadioAccessTechnologyCDMA1x]) {
+        return @"CDMA";
+    } else if ([info isEqualToString:CTRadioAccessTechnologyCDMAEVDORev0]) {
+        return @"CDMA";
+    } else if ([info isEqualToString:CTRadioAccessTechnologyCDMAEVDORevA]) {
+        return @"CDMA";
+    } else if ([info isEqualToString:CTRadioAccessTechnologyCDMAEVDORevB]) {
+        return @"CDMA";
+    } else if ([info isEqualToString:CTRadioAccessTechnologyeHRPD]) {
+        return @"3G";
+    } else if ([info isEqualToString:CTRadioAccessTechnologyLTE]) {
+        return @"LTE";
+    }else{
+        return @"NA";
+    }
+}
+
 - (void)_updateData {
     // Handle telephony first.
     SBTelephonyManager *telephonyManager = [objc_getClass("SBTelephonyManager") sharedTelephonyManager];
-    
+
+    // LTE, 3G, 2G, CDMA
+    self.signalNetworkType = [self getNetworkType];
+
     // RSSI
     if ([telephonyManager respondsToSelector:@selector(signalStrength)])
         self.signalStrengthRSSI = [NSNumber numberWithInt:[telephonyManager signalStrength]];
@@ -100,8 +142,8 @@
 }
 
 - (NSString*)_variablesToJSString {
-    return [NSString stringWithFormat:@"var signalStrength = '%@', signalBars = '%@', signalName = '%@', wifiStrength = '%@', wifiBars = '%@', wifiName = '%@', bluetoothOn = '%@';", self.signalStrengthRSSI, self.signalStrengthBars,
-            self.operatorName, self.wifiStrengthRSSI, self.wifiStrengthBars, self.wifiNetworkName, [NSNumber numberWithBool:self.bluetoothConnected]];
+    return [NSString stringWithFormat:@"var signalStrength = '%@', signalBars = '%@', signalName = '%@', wifiStrength = '%@', wifiBars = '%@', wifiName = '%@', bluetoothOn = '%@', signalNetworkType = '%@';", self.signalStrengthRSSI, self.signalStrengthBars,
+            self.operatorName, self.wifiStrengthRSSI, self.wifiStrengthBars, self.wifiNetworkName, [NSNumber numberWithBool:self.bluetoothConnected], self.signalNetworkType];
 }
 
 - (NSString*)_escapeString:(NSString*)input {

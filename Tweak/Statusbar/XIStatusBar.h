@@ -8,10 +8,11 @@
 
 #import <Foundation/Foundation.h>
 #import "../Internal/XIWidgetDataProvider-Protocol.h"
+#import <CoreTelephony/CTTelephonyNetworkInfo.h>
 
 @interface XIStatusBar : NSObject <XIWidgetDataProvider>
 
 // Delegate is stored to communicate data back to widgets
 @property (nonatomic, weak) id<XIWidgetManagerDelegate> delegate;
-
+@property (nonatomic, strong) CTTelephonyNetworkInfo *networkInfo;
 @end
