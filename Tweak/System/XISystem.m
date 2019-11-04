@@ -18,6 +18,11 @@
 #include <ifaddrs.h>
 #include <arpa/inet.h>
 
+@interface SBLockScreenManager : NSObject
+- (id)sharedInstance;
+- (void)lockScreenViewControllerRequestsUnlock;
+@end
+
 @interface SpringBoard : UIApplication
 - (void)launchApplicationWithIdentifier:(NSString*)identifier suspended:(BOOL)suspended;
 @end
@@ -90,6 +95,7 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
 -(void)openApplicationWithBundleIdentifier:(NSString *)bundleIdentifier {
     @try {
         [(SpringBoard*)[UIApplication sharedApplication] launchApplicationWithIdentifier:bundleIdentifier suspended:NO];
+        [[objc_getClass("SBLockScreenManager") sharedInstance] lockScreenViewControllerRequestsUnlock];
     } @catch(NSException* err) {
         NSLog(@"XenInfo :: Error launching application: %@", err);
     }
@@ -108,6 +114,7 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
         } else {
             [[UIApplication sharedApplication] openURL:urlPath options:@{} completionHandler:nil];
         }
+        [[objc_getClass("SBLockScreenManager") sharedInstance] lockScreenViewControllerRequestsUnlock];
     }
 #pragma clang diagnostic pop
 }
@@ -118,6 +125,7 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
     } else {
         [[objc_getClass("SBSearchGesture") sharedInstance] revealAnimated:YES];
     }
+    [[objc_getClass("SBLockScreenManager") sharedInstance] lockScreenViewControllerRequestsUnlock];
 }
 
 - (void)logMessage:(NSString*)message {
