@@ -19,6 +19,15 @@
 @property (nonatomic,copy,readonly) NSString * lastKnownNetworkCountryCode;
 @end
 
+//iOS13
+@interface STTelephonySubscriptionInfo : NSObject
+-(NSString *)operatorName;
+-(unsigned long long)signalStrengthBars;
+-(NSString *)identifier;
+@property (nonatomic,readonly) unsigned long long dataConnectionType;
+-(unsigned long long)maxSignalStrengthBars;
+@end
+
 @interface SBTelephonyManager : NSObject
 + (id)sharedTelephonyManager;
 - (int)signalStrengthBars;
@@ -27,6 +36,7 @@
 -(int)dataConnectionType;
 
 -(SBTelephonySubscriptionInfo*)subscriptionInfo; // iOS 12
+-(STTelephonySubscriptionInfo* )_primarySubscriptionInfo; //iOS13
 @end
 
 @interface SBWiFiManager : NSObject

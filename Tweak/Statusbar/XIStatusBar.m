@@ -113,14 +113,17 @@
         self.signalStrengthBars = [NSNumber numberWithInt:[telephonyManager signalStrengthBars]];
     else if ([telephonyManager respondsToSelector:@selector(subscriptionInfo)])
         self.signalStrengthBars = [NSNumber numberWithInt:[telephonyManager subscriptionInfo].signalStrengthBars];
+    else if([telephonyManager respondsToSelector:@selector(_primarySubscriptionInfo)]) //iOS13
+        self.signalStrengthBars = [NSNumber numberWithInt:(int)[[telephonyManager _primarySubscriptionInfo] signalStrengthBars]];
     else
         self.signalStrengthBars = [NSNumber numberWithInt:0];
-
     // Operator name
     if ([telephonyManager respondsToSelector:@selector(operatorName)])
         self.operatorName = [self _escapeString:[telephonyManager operatorName]];
     else if ([telephonyManager respondsToSelector:@selector(subscriptionInfo)])
         self.operatorName = [self _escapeString:[telephonyManager subscriptionInfo].operatorName];
+    else if ([telephonyManager respondsToSelector:@selector(_primarySubscriptionInfo)]) //iOS13
+        self.operatorName = [telephonyManager _primarySubscriptionInfo].operatorName;
     else
         self.operatorName = @"";
 
