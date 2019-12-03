@@ -31,6 +31,15 @@
 
 // New style
 
+@interface MTAlarmManager : NSObject
+-(id)alarms;
++(void)warmUp;
+-(void)checkIn;
+-(id)nextAlarmsForDate:(id)arg1 maxCount:(unsigned long long)arg2 includeSleepAlarm:(BOOL)arg3 ;
+-(id)alarmsSyncIncludingSleepAlarm:(BOOL)arg1 ;
++(id)xeninfo_alarms;
+@end
+
 @interface MTAlarm : NSObject
 @property (assign, nonatomic) BOOL allowsSnooze;
 @property (getter=isSnoozed,nonatomic,readonly) BOOL snoozed; 

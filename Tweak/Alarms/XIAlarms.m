@@ -43,7 +43,11 @@
 
 - (void)requestRefresh {
     if ([UIDevice currentDevice].systemVersion.floatValue >= 12.0) {
-        [self _requestRefreshiOS12AndHigher];
+        if ([UIDevice currentDevice].systemVersion.floatValue >= 13.0) {
+            [self _requestRefreshiOS13AndHigher];
+        }else{
+            [self _requestRefreshiOS12AndHigher];
+        }
     } else {
         [self _requestRefreshiOS11AndLower];
     }
@@ -105,6 +109,57 @@
         // And then send the data through to the widgets
         [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIAlarms topic]];
     }
+}
+
+- (void)_requestRefreshiOS13AndHigher {
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void) {
+        NSArray* alarms;
+        NSMutableDictionary *alarms13 = [objc_getClass("MTAlarmManager") xeninfo_alarms];
+        NSLog(@"XenInfoTest alarms is %@", alarms13);
+        alarms = [alarms13 valueForKey:@"alarms"];
+        if (!alarms || alarms.count == 0) {
+            self.alarms = @[];
+            [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIAlarms topic]];
+        } else {
+            NSMutableArray *parsedAlarms = [NSMutableArray array];
+            for (MTAlarm *alarm in alarms) {
+                if (alarm.enabled) {
+                    // Parse firedate into values
+                    NSDate *fireDate = alarm.nextFireDate;
+                    
+                    NSDateComponents *components = [[NSCalendar currentCalendar] components:NSCalendarUnitHour | NSCalendarUnitWeekday | NSCalendarUnitMinute fromDate:fireDate];
+                    int weekday = components.weekday - 1;
+                    int hour = components.hour;
+                    int minute = components.minute;
+                    
+                    NSString *weekdayStr = [NSString stringWithFormat:@"%d", weekday];
+                    NSString *hourStr = hour < 10 ? [NSString stringWithFormat:@"0%d", hour] : [NSString stringWithFormat:@"%d", hour];
+                    NSString *minuteStr = minute < 10 ? [NSString stringWithFormat:@"0%d", minute] : [NSString stringWithFormat:@"%d", minute];
+                    
+                    NSDictionary *parsedAlarm = @{
+                                                    @"title": @"",
+                                                    @"body": alarm.displayTitle ? alarm.displayTitle : @"",
+                                                    @"nextFireDateTimestamp": [NSNumber numberWithDouble:[fireDate timeIntervalSince1970]],
+                                                    @"nextFireDateTimeParsed": [self _parseDateToTimeString:fireDate],
+                                                    @"nextFireDateDayParsed": [self _parseDateToDayString:fireDate],
+                                                    @"allowSnooze": [NSNumber numberWithBool:alarm.allowsSnooze],
+                                                    @"repeatingFromSnoozed": [NSNumber numberWithBool:alarm.snoozed],
+                                                    @"legacyFireDateMinute": minuteStr,
+                                                    @"legacyFireDateHour": hourStr,
+                                                    @"legacyFireDateDay": weekdayStr,
+                                                    };
+                    
+                    [parsedAlarms addObject:parsedAlarm];
+                }
+            }
+            
+            self.alarms = parsedAlarms;
+            
+            // And then send the data through to the widgets
+            [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIAlarms topic]];
+        }
+    });
 }
 
 - (void)_requestRefreshiOS12AndHigher {
