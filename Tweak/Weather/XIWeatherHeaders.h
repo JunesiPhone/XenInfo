@@ -24,6 +24,17 @@
 @end
 
 @interface CLLocationManager (Private)
+- (id)appsUsingLocation;
++ (void)setAuthorizationStatus:(bool)arg1 forBundle:(id)arg2;
++ (void)setAuthorizationStatus:(bool)arg1 forBundleIdentifier:(id)arg2;
++ (void)setAuthorizationStatusByType:(int)arg1 forBundle:(id)arg2;
++ (void)setAuthorizationStatusByType:(int)arg1 forBundleIdentifier:(id)arg2;
++ (void)setBackgroundIndicatorEnabled:(bool)arg1 forBundle:(id)arg2;
++ (void)setBackgroundIndicatorEnabled:(bool)arg1 forBundleIdentifier:(id)arg2;
++ (void)setBackgroundIndicatorEnabled:(bool)arg1 forLocationDictionary:(id)arg2;
+@end
+
+@interface CLApproved : CLLocationManager
 + (int)authorizationStatusForBundleIdentifier:(id)arg1;
 @end
 
@@ -40,6 +51,8 @@
 @interface TWCLocationUpdater : NSObject
 + (instancetype)sharedLocationUpdater;
 - (void)updateWeatherForLocation:(id)arg1 city:(id)arg2;
+- (void)_updateWeatherForLocation:(id)arg1 city:(id)arg2 completionHandler:(id /* block */)arg3;
+-(void)updateWeatherForLocation:(id)arg1 city:(id)arg2 isFromFrameworkClient:(BOOL)arg3 withCompletionHandler:(/*^block*/id)arg4 ;
 @end
 
 @interface WFTemperature : NSObject
@@ -153,6 +166,7 @@
 @end
 
 @interface WFLocation : NSObject
+@property(copy, nonatomic) CLLocation *geoLocation;
 @end
 
 @interface WAForecastModel : NSObject
@@ -174,6 +188,7 @@
 - (void)addObserver:(id<WATodayModelObserver>)arg1;
 - (void)removeObserver:(id<WATodayModelObserver>)arg1;
 - (BOOL)executeModelUpdateWithCompletion:(/*^block*/id)arg1 ;
+- (id)location;
 @end
 
 @interface WATodayAutoupdatingLocationModel : WATodayModel

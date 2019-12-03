@@ -177,7 +177,6 @@
                                     @"icon": [NSNumber numberWithLong:dayForecast.icon]
                                     }];
     }
-    
     NSMutableArray *hourlyForecasts = [[NSMutableArray alloc] init];
     for (HourlyForecast *hourForecast in self.currentCity.hourlyForecasts) {
         int temperature = 0;
@@ -236,7 +235,7 @@
                                                                                         options:0
                                                                                           error:nil]
                                                encoding:NSUTF8StringEncoding];
-    
+
     return [NSString stringWithFormat:@"var weather = JSON.parse('%@');", jsonObj];
 }
 
@@ -279,6 +278,7 @@
 #pragma mark Provider specific methods
 
 - (instancetype)init {
+
     self = [super init];
     
     if (self) {
@@ -302,7 +302,6 @@
 - (void)didUpdateCity:(City*)city {
     // City did update, this is now the current city.
     self.currentCity = city;
-    
     // Do a reverse geocoding request for this city
     CLGeocoder *geocoder = [CLGeocoder new];
     [geocoder reverseGeocodeLocation:city.location completionHandler:^(NSArray *placemarks, NSError *error) {
@@ -335,8 +334,11 @@
             
             Xlog(@"Got new geocoded address: %@", self.reverseGeocodedAddress);
         }
-        
         [self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIWeather topic]];
+        //dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 1.5);
+        //dispatch_after(delay, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
+            //[self.delegate updateWidgetsWithNewData:[self _variablesToJSString] onTopic:[XIWeather topic]];
+        //});
     }];
 }
 

@@ -48,6 +48,7 @@
 @property (nonatomic, retain) NSDate *lastUpdateTime;
 @property (nonatomic, retain) NSDate *nextUpdateTime;
 @property (nonatomic, readwrite) BOOL deviceIsAsleep;
+@property (nonatomic, readwrite) int userAuthorizationStatus;
 //@property (nonatomic, readwrite) BOOL refreshQueuedDuringDeviceSleep;
 @property (nonatomic, readwrite) BOOL networkIsDisconnected;
 @property (nonatomic, readwrite) BOOL refreshQueuedDuringNetworkDisconnected;
@@ -65,7 +66,8 @@
         // Set default values
         _ignoreUpdateFlag = NO;
         self.lastUpdateTime = nil;
-        
+        self.userAuthorizationStatus = 99;
+        [self setWeatherLocationType:3]; //iOS13 doesn't show the user this but it's still there.
         [self _restartTimerWithInterval:UPDATE_INTERVAL * 60];
         [self _setupTodayModels];
     }
@@ -159,17 +161,34 @@
     self.currentCity = self.todayModel.forecastModel.city;
 }
 
+-(void)setWeatherLocationType:(int)authType{
+    // if(self.userAuthorizationStatus == 99){
+    //     NSLog(@"XenInfoTest auth1 %d", self.userAuthorizationStatus);
+    //     /* Store user state so we can set it back */
+    //     self.userAuthorizationStatus = [objc_getClass("CLLocationManager") authorizationStatusForBundleIdentifier:@"com.apple.weather"];
+    //     NSLog(@"XenInfoTest auth2 %d", self.userAuthorizationStatus);
+    // }
+    /*
+        2:Never 0:AskNextTime 4:While Using App
+        3:Always (only shown < iOS13 to the user)
+     
+        When this is called [CLLocationManager location] is also called which is getting updated location info.
+        Tested by logging -(id)location{} and calling setAuthorizationStatusByType after you've moved location.
+        This would be like setting location services > weather > always I do believe.
+        Works iOS8-13
+    */
+    [objc_getClass("CLLocationManager") setAuthorizationStatusByType:authType forBundleIdentifier:@"com.apple.weather"];
+}
+
 - (WATodayAutoupdatingLocationModel*)_loadLocationModel {
     WeatherPreferences *preferences = [objc_getClass("WeatherPreferences") sharedPreferences];
-    
     WATodayAutoupdatingLocationModel *todayModel = [objc_getClass("WATodayModel") autoupdatingLocationModelWithPreferences:preferences effectiveBundleIdentifier:@"com.apple.weather"];
     
     // Override here to kickstart location manager when services are disabled after a respring
     [todayModel setLocationServicesActive:YES];
     [todayModel setIsLocationTrackingEnabled:YES];
-    
+    [todayModel executeModelUpdateWithCompletion:^(BOOL arg1, NSError *arg2) {}];
     [todayModel addObserver:self];
-    
     return todayModel;
 }
 
@@ -193,12 +212,25 @@
         // Turn off location tracking
         _ignoreUpdateFlag = YES; // No need to run an update for this battery management change
         [self.todayModel setIsLocationTrackingEnabled:NO];
+        
+    }];
+}
+
+-(void)updateWeatherForLocation:(WFLocation *)location withCity:(City *) city{
+    TWCLocationUpdater* updater = [objc_getClass("TWCLocationUpdater") sharedLocationUpdater];
+    CLLocation* cLLocation = [location geoLocation];
+    [updater updateWeatherForLocation:cLLocation city:city isFromFrameworkClient:NO withCompletionHandler:^(City* city){
+
+        // Notify widgets
+        [self.delegate didUpdateCity:city];
+
+        // Update last updated time
+        self.lastUpdateTime = city.updateTime;
+        //[self setWeatherLocationType:self.userAuthorizationStatus]; //set location services weather back to the user defined auth type.
     }];
 }
 
 - (void)_updateModel:(WATodayAutoupdatingLocationModel*)todayModel {
-    Xlog(@"Updating weather data...");
-    
     // Updating setIsLocationTrackingEnabled: will cause the today model to request an update
     // Need to start location updates if available to get accurate data
     _ignoreUpdateFlag = YES;
@@ -208,15 +240,28 @@
     // We just want to ensure there's sufficient time for location services to get new locations.
     dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 1.5);
     dispatch_after(delay, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
-        
         // Request new data
         [todayModel executeModelUpdateWithCompletion:^(BOOL arg1, NSError *arg2) {
-            if (!arg2 || [self _date:todayModel.forecastModel.city.updateTime isNewerThanDate:self.lastUpdateTime]) {
-                // Notify widgets
-                [self.delegate didUpdateCity:todayModel.forecastModel.city];
-                
-                // Update last updated time
-                self.lastUpdateTime = todayModel.forecastModel.city.updateTime;
+            /*
+                The today model isn't getting the updated weather on iOS13 and I believe 12.5 up.
+                iOS13 the today model is updating location, but is not updating weather info.
+                updateWeatherForLocation takes the today model info (location and city)
+                and updates through TWCLocationUpdater
+            */
+            if([UIDevice currentDevice].systemVersion.floatValue >= 12.5){
+                if (!arg2 || [self _date:[[NSDate date] dateByAddingTimeInterval:UPDATE_INTERVAL] isNewerThanDate:self.lastUpdateTime]) {
+                    WFLocation* todayModelLocation = [self.todayModel location];
+                    if(todayModelLocation){
+                        [self updateWeatherForLocation:todayModelLocation withCity:self.todayModel.forecastModel.city];
+                    }
+                }
+            }else{
+                if (!arg2 || [self _date:todayModel.forecastModel.city.updateTime isNewerThanDate:self.lastUpdateTime]) {
+                    // Notify widgets
+                    [self.delegate didUpdateCity:todayModel.forecastModel.city];
+                    // Update last updated time
+                    self.lastUpdateTime = todayModel.forecastModel.city.updateTime; 
+                }
             }
         }];
         
