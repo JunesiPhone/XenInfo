@@ -1,6 +1,6 @@
 export THEOS_DEVICE_IP=localhost -p 2222
-TARGET = iphone:11.2:11.2
-ARCHS =  arm64 arm64e
+TARGET = iphone:9.2:9.2
+ARCHS =  armv7 armv7s arm64 arm64e
 FINALPACKAGE = 1
 
 include $(THEOS)/makefiles/common.mk
