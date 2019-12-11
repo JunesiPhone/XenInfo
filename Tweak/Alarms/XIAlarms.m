@@ -116,7 +116,6 @@
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void) {
         NSArray* alarms;
         NSMutableDictionary *alarms13 = [objc_getClass("MTAlarmManager") xeninfo_alarms];
-        NSLog(@"XenInfoTest alarms is %@", alarms13);
         alarms = [alarms13 valueForKey:@"alarms"];
         if (!alarms || alarms.count == 0) {
             self.alarms = @[];

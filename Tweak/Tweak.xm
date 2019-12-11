@@ -476,12 +476,13 @@ static NSMutableDictionary *xeninfoAlarms = [[NSMutableDictionary alloc]init];
 //doesn't get called on iOS12 on iOS13 it gets called on respring and when an alarm is changed.
 -(id)alarms{
 	[self alarmsSyncIncludingSleepAlarm:YES];
-	//CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFSTR("com.junesiphone.frontpage.updatingalarm"), NULL, NULL, true);
 	return %orig;
 }
 //doesn't get called on iOS12 on iOS13 it gets called on respring and when an alarm is changed.
 -(id)alarmsSyncIncludingSleepAlarm:(BOOL)arg1 {
-	[xeninfoAlarms setObject:%orig forKey:@"alarms"];
+    if(%orig){
+        [xeninfoAlarms setObject:%orig forKey:@"alarms"];
+    }
 	return %orig;
 }
 
