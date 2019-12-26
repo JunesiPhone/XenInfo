@@ -113,10 +113,26 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
 }
 
 - (void)openSpotlight {
-    if ([UIDevice currentDevice].systemVersion.floatValue >= 11.0) {
-        [[[objc_getClass("SBIconController") sharedInstance] searchGesture] revealAnimated:YES];
-    } else {
-        [[objc_getClass("SBSearchGesture") sharedInstance] revealAnimated:YES];
+    if([UIDevice currentDevice].systemVersion.floatValue >= 13.0){
+        if ([[objc_getClass("SBIconController") sharedInstance] respondsToSelector:@selector(iconManager)]) {
+            SBHIconManager* iconManager =  [[objc_getClass("SBIconController") sharedInstance] iconManager];
+            if([iconManager respondsToSelector:@selector(searchGesture)]){
+                SBSearchGesture* gesture = [iconManager searchGesture];
+                if([gesture respondsToSelector:@selector(revealAnimated:)]){
+                    [gesture revealAnimated:YES];
+                }
+            }
+        }
+    }else{
+        if([UIDevice currentDevice].systemVersion.floatValue >= 11.0){
+            if ([[objc_getClass("SBIconController") sharedInstance] respondsToSelector:@selector(searchGesture)]) {
+                [[[objc_getClass("SBIconController") sharedInstance] searchGesture] revealAnimated:YES];
+            }
+        }else{
+            if ([[objc_getClass("SBSearchGesture") sharedInstance] respondsToSelector:@selector(revealAnimated:)]) {
+                    [[objc_getClass("SBSearchGesture") sharedInstance] revealAnimated:YES];
+            }
+        }
     }
 }
 
