@@ -78,10 +78,10 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
 - (NSString*)_escapeString:(NSString*)input {
     if (!input)
         return @"";
-    
+
     input = [input stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
     input = [input stringByReplacingOccurrencesOfString: @"\"" withString:@"\\\""];
-    
+
     return input;
 }
 
@@ -98,7 +98,7 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
 -(void)openURL:(NSString *)path {
     NSString* address = [NSString stringWithFormat:@"http://%@", path];
     NSURL *urlPath = [NSURL URLWithString:address];
-    
+
     if ([[UIApplication sharedApplication] canOpenURL:urlPath]) {
         // Handle deprecated openURL: for lower iOS versions.
 #pragma clang diagnostic push
@@ -144,7 +144,7 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
 
 - (instancetype)init {
     self = [super init];
-    
+
     if (self) {
         // Set our cached variables - they're static for the time SpringBoard runs
         self.cachedSystemVersion = [self _systemVersion];
@@ -154,7 +154,7 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
         self.cachedIPAddress = [self _ipAddress];
         self.cachedNotificationShowing = [self _notificationsShowing];
     }
-    
+
     return self;
 }
 
@@ -179,7 +179,7 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
                 if([[NSString stringWithUTF8String:temp_addr->ifa_name] isEqualToString:@"en0"]) {
                     // Get NSString from C String
                     address = [NSString stringWithUTF8String:inet_ntoa(((struct sockaddr_in *)temp_addr->ifa_addr)->sin_addr)];
-                    
+
                 }
             }
             temp_addr = temp_addr->ifa_next;
@@ -199,7 +199,7 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
     @{
       @"i386":     @"i386 Simulator",
       @"x86_64":   @"x86_64 Simulator",
-      
+
       @"iPhone1,1":    @"iPhone",
       @"iPhone1,2":    @"iPhone 3G",
       @"iPhone2,1":    @"iPhone 3GS",
@@ -232,7 +232,10 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
       @"iPhone11,4":   @"iPhone XS Max",
       @"iPhone11,6":   @"iPhone XS Max",
       @"iPhone11,8":   @"iPhone XR",
-      
+      @"iPhone12,1":   @"iPhone 11",
+      @"iPhone12,3":   @"iPhone 11 Pro",
+      @"iPhone12,5":   @"iPhone 11 Pro Max",
+
       @"iPad1,1":  @"iPad",
       @"iPad2,1":  @"iPad 2",
       @"iPad2,2":  @"iPad 2",
@@ -249,7 +252,7 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
       @"iPad4,3":  @"iPad Air",
       @"iPad5,3":  @"iPad Air 2",
       @"iPad5,4":  @"iPad Air 2",
-      
+
       @"iPad2,5":  @"iPad mini",
       @"iPad2,6":  @"iPad mini",
       @"iPad2,7":  @"iPad mini",
@@ -261,7 +264,7 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
       @"iPad4,9":  @"iPad mini 3",
       @"iPad5,1":  @"iPad mini 4",
       @"iPad5,2":  @"iPad mini 4",
-      
+
       @"iPod1,1":  @"iPod 1st Gen",
       @"iPod2,1":  @"iPod 2nd Gen",
       @"iPod3,1":  @"iPod 3rd Gen",
@@ -269,13 +272,13 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
       @"iPod5,1":  @"iPod 5th Gen",
       @"iPod7,1":  @"iPod 6th Gen",
       };
-    
+
     NSString *deviceName = commonNamesDictionary[machineName];
-    
+
     if (deviceName == nil) {
         deviceName = machineName;
     }
-    
+
     return deviceName;
 }
 
@@ -290,7 +293,7 @@ static NSString *nsDomainString = @"com.junesiphone.xeninfosettings";
 - (BOOL)_using24h {
     NSString *formatStringForHours = [NSDateFormatter dateFormatFromTemplate:@"j" options:0 locale:[NSLocale currentLocale]];
     NSRange containsA = [formatStringForHours rangeOfString:@"a"];
-    
+
     return containsA.location == NSNotFound;
 }
 
